@@ -1,6 +1,6 @@
 struct ll {
-        char key;
-        struct ll *next;
+	char key;
+	struct ll *next;
 };
 
 struct ll *llcreate(void);

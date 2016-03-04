@@ -1,6 +1,6 @@
 struct cll {
-        char key;
-        struct cll *next;
+	char key;
+	struct cll *next;
 };
 
 struct cll *cllcreate(void);
