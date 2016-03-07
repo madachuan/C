@@ -20,16 +20,16 @@ void dmcll(void)
 	struct cll *p = NULL;
 	struct cll *head = cllcreate();
 	for (i = 0, p = head; i < 2 * clllen(head, head->next); i++) {
-	        printf("%02X  ", (unsigned char)p->next->key);
-	        p = p->next;
+		printf("%02X  ", (unsigned char)p->next->key);
+		p = p->next;
 	}
 	printf("... cllcreate ... clllen\n");
 	cllinstail(head, head->next, 0x01);
 	cllinstail(head, head->next, 0x02);
 	cllinstail(head, head->next, 0x03);
 	for (i = 0, p = head; i < 2 * clllen(head, head->next); i++) {
-	        printf("%02X  ", (unsigned char)p->next->key);
-	        p = p->next;
+		printf("%02X  ", (unsigned char)p->next->key);
+		p = p->next;
 	}
 	printf("... cllinstail ... cllins\n");
 	printf("%02X ... cllmax\n", cllmax(head, head->next)->key);
@@ -40,7 +40,7 @@ struct cll *cllcreate(void)
 {
 	struct cll *head = malloc(sizeof(*head));
 	if (!head)
-	        exit(ENOMEM);
+		exit(ENOMEM);
 	head->key = 0;
 	head->next = NULL;
 	return (head);
@@ -49,26 +49,26 @@ struct cll *cllcreate(void)
 struct cll *clltail(struct cll *head, struct cll *p)
 {
 	if (!head)
-	        exit(EFAULT);
+		exit(EFAULT);
 	if (!p)
-	        return (head);
+		return (head);
 	if (!p->next)
-	        return (p);
+		return (p);
 	if (p->next == head->next)
-	        return (p);
+		return (p);
 	return (clltail(head, p->next));
 }
 
 struct cll *cllmax(struct cll *head, struct cll *p)
 {
 	if (!head)
-	        exit(EFAULT);
+		exit(EFAULT);
 	if (!p)
-	        return (NULL);
+		return (NULL);
 	if (!p->next)
-	        return (p);
+		return (p);
 	if (p->next == head->next)
-	        return (p);
+		return (p);
 	struct cll *tmp = cllmax(head, p->next);
 	return (p->key > tmp->key ? p : tmp);
 }
@@ -76,13 +76,13 @@ struct cll *cllmax(struct cll *head, struct cll *p)
 struct cll *cllmin(struct cll *head, struct cll *p)
 {
 	if (!head)
-	        exit(EFAULT);
+		exit(EFAULT);
 	if (!p)
-	        return (NULL);
+		return (NULL);
 	if (!p->next)
-	        return (p);
+		return (p);
 	if (p->next == head->next)
-	        return (p);
+		return (p);
 	struct cll *tmp = cllmin(head, p->next);
 	return (p->key < tmp->key ? p : tmp);
 }
@@ -90,24 +90,24 @@ struct cll *cllmin(struct cll *head, struct cll *p)
 int clllen(struct cll *head, struct cll *p)
 {
 	if (!head)
-	        exit(EFAULT);
+		exit(EFAULT);
 	if (!p)
-	        return (0);
+		return (0);
 	if (!p->next)
-	        return (1);
+		return (1);
 	if (p->next == head->next)
-	        return (1);
+		return (1);
 	return (1 + clllen(head, p->next));
 }
 
 void cllinstail(struct cll *head, struct cll *p, char key)
 {
 	if (!head)
-	        exit(EFAULT);
+		exit(EFAULT);
 	struct cll *tail = clltail(head, p);
 	tail->next = malloc(sizeof(*p));
 	if (!tail->next)
-	        exit(ENOMEM);
+		exit(ENOMEM);
 	tail->next->key = key;
 	tail->next->next = head->next;
 }

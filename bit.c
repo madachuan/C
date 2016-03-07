@@ -25,8 +25,8 @@ int bitsum0(char byte)
 	int ret;
 	int i;
 	for (i = 0, ret = 0; i < 8; i++)
-	        if (!(byte & (0x01 << i)))
-	                ret++;
+		if (!(byte & (0x01 << i)))
+			ret++;
 	return (ret);
 }
 
@@ -35,8 +35,8 @@ int bitsum1(char byte)
 	int ret;
 	int i;
 	for (i = 0, ret = 0; i < 8; i++)
-	        if (byte & (0x01 << i))
-	                ret++;
+		if (byte & (0x01 << i))
+			ret++;
 	return (ret);
 }
 
@@ -45,10 +45,10 @@ char bitrev(char byte)
 	char ret;
 	int i;
 	for (i = 0, ret = 0; i < 8; i++) {
-	        if (7 - i * 2 > 0)
-	                ret |= (byte & (0x01 << i)) << (7 - i * 2);
-	        else
-	                ret |= (byte & (0x01 << i)) >> (i * 2 - 7);
+		if (7 - i * 2 > 0)
+			ret |= (byte & (0x01 << i)) << (7 - i * 2);
+		else
+			ret |= (byte & (0x01 << i)) >> (i * 2 - 7);
 	}
 	return (ret);
 }

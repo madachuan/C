@@ -22,13 +22,13 @@ void dmchk(void)
 char chkadd(char *p, int n)
 {
 	if (!n)
-	        return (0);
+		return (0);
 	return (*p + chkadd(p + 1, n - 1));
 }
 
 char chkxor(char *p, int n)
 {
 	if (!n)
-	        return (0);
+		return (0);
 	return (*p ^ chkxor(p + 1, n - 1));
 }
