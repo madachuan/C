@@ -215,7 +215,7 @@ void gpsr(void)
 			continue;
 		}
 		char *end = NULL;
-		if (!end = strstr(bufr, "\r\n"))
+		if (!(end = strstr(bufr, "\r\n")))
 			continue;
 		if (*(end - 3) != '*') {
 			sum = 0;
