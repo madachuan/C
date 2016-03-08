@@ -19,18 +19,14 @@ void dmcll(void)
 	int i;
 	struct cll *p = NULL;
 	struct cll *head = cllcreate();
-	for (i = 0, p = head; i < 2 * clllen(head, head->next); i++) {
+	for (i = 0, p = head; i < 2 * clllen(head, head->next); i++, p = p->next)
 		printf("%02X  ", (unsigned char)p->next->key);
-		p = p->next;
-	}
 	printf("... cllcreate ... clllen\n");
 	cllinstail(head, head->next, 0x01);
 	cllinstail(head, head->next, 0x02);
 	cllinstail(head, head->next, 0x03);
-	for (i = 0, p = head; i < 2 * clllen(head, head->next); i++) {
+	for (i = 0, p = head; i < 2 * clllen(head, head->next); i++, p = p->next)
 		printf("%02X  ", (unsigned char)p->next->key);
-		p = p->next;
-	}
 	printf("... cllinstail ... cllins\n");
 	printf("%02X ... cllmax\n", cllmax(head, head->next)->key);
 	printf("%02X ... cllmin\n", cllmin(head, head->next)->key);

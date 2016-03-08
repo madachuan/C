@@ -19,116 +19,83 @@ void dmll(void)
 	int i;
 	struct ll *p = NULL;
 	struct ll *head = llcreate();
-	for (i = 0, p = head; i < lllen(head); i++) {
+	for (i = 0, p = head; i < lllen(head); i++, p = p->next)
 		printf("%02X  ", (unsigned char)p->next->key);
-		p = p->next;
-	}
 	printf("... llcreate ... lllen\n");
 	llbuild(head, 5, 0xCC);
-	for (i = 0, p = head; i < lllen(head); i++) {
+	for (i = 0, p = head; i < lllen(head); i++, p = p->next)
 		printf("%02X  ", (unsigned char)p->next->key);
-		p = p->next;
-	}
 	printf("... llbuild\n");
 	llclean(head);
-	for (i = 0, p = head; i < lllen(head); i++) {
+	for (i = 0, p = head; i < lllen(head); i++, p = p->next)
 		printf("%02X  ", (unsigned char)p->next->key);
-		p = p->next;
-	}
 	printf("... llclean\n");
 	char buf[9] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
 	llinit(head, 9, buf);
-	for (i = 0, p = head; i < lllen(head); i++) {
+	for (i = 0, p = head; i < lllen(head); i++, p = p->next)
 		printf("%02X  ", (unsigned char)p->next->key);
-		p = p->next;
-	}
 	printf("... llinit\n");
 	printf("%02X  ... llmax\n", llmax(head)->key);
 	printf("%02X  ... llmin\n", llmin(head)->key);
 	char bufcpy[20];
 	llcpy(bufcpy, 9, head);
-	for (i = 0; i < sizeof(bufcpy); i++) {
+	for (i = 0; i < sizeof(bufcpy); i++)
 		printf("%02X  ", (unsigned char)bufcpy[i]);
-	}
 	printf("... llcpy\n");
 	llrev(head);
-	for (i = 0, p = head; i < lllen(head); i++) {
+	for (i = 0, p = head; i < lllen(head); i++, p = p->next)
 		printf("%02X  ", (unsigned char)p->next->key);
-		p = p->next;
-	}
 	printf("... llrev ... llstrip ... lltail\n");
 	llrep(head, 0x01, 0x09);
 	llrep(head, 0x05, 0x09);
 	llrep(head, 0x09, 0xAA);
-	for (i = 0, p = head; i < lllen(head); i++) {
+	for (i = 0, p = head; i < lllen(head); i++, p = p->next)
 		printf("%02X  ", (unsigned char)p->next->key);
-		p = p->next;
-	}
 	printf("... llrep\n");
 	printf("%d  ", llscan(head, 0xAA));
 	printf("... llscan\n");
 	lldelscan(head, 0xAA);
-	for (i = 0, p = head; i < lllen(head); i++) {
+	for (i = 0, p = head; i < lllen(head); i++, p = p->next)
 		printf("%02X  ", (unsigned char)p->next->key);
-		p = p->next;
-	}
 	printf("... lldelscan\n");
 	printf("|%02X|  ", llfind(head, 0x04)->key);
-	for (i = 0, p = head; i < lllen(head); i++) {
+	for (i = 0, p = head; i < lllen(head); i++, p = p->next)
 		printf("%02X  ", (unsigned char)p->next->key);
-		p = p->next;
-	}
 	printf("... llfind\n");
 	lldelfind(head, 0x04);
-	for (i = 0, p = head; i < lllen(head); i++) {
+	for (i = 0, p = head; i < lllen(head); i++, p = p->next)
 		printf("%02X  ", (unsigned char)p->next->key);
-		p = p->next;
-	}
 	printf("... lldelfind\n");
 	struct ll *get = llget(head, 0x03);
 	printf("|%02X|  ", get->key);
-	for (i = 0, p = head; i < lllen(head); i++) {
+	for (i = 0, p = head; i < lllen(head); i++, p = p->next)
 		printf("%02X  ", (unsigned char)p->next->key);
-		p = p->next;
-	}
 	printf("... llget\n");
 	lladd(head, get);
-	for (i = 0, p = head; i < lllen(head); i++) {
+	for (i = 0, p = head; i < lllen(head); i++, p = p->next)
 		printf("%02X  ", (unsigned char)p->next->key);
-		p = p->next;
-	}
 	printf("... lladd\n");
 	get = llget(head, 0x07);
 	lladdtail(head, get);
-	for (i = 0, p = head; i < lllen(head); i++) {
+	for (i = 0, p = head; i < lllen(head); i++, p = p->next)
 		printf("%02X  ", (unsigned char)p->next->key);
-		p = p->next;
-	}
 	printf("... lladdtail\n");
 	head = llbehead(head);
-	for (i = 0, p = head; i < lllen(head); i++) {
+	for (i = 0, p = head; i < lllen(head); i++, p = p->next)
 		printf("%02X  ", (unsigned char)p->next->key);
-		p = p->next;
-	}
 	printf("... llbehead\n");
 	llins(head, 0xEE);
 	llinstail(head, 0xBB);
-	for (i = 0, p = head; i < lllen(head); i++) {
+	for (i = 0, p = head; i < lllen(head); i++, p = p->next)
 		printf("%02X  ", (unsigned char)p->next->key);
-		p = p->next;
-	}
 	printf("... llins ... llinstail\n");
 	lldel(head);
-	for (i = 0, p = head; i < lllen(head); i++) {
+	for (i = 0, p = head; i < lllen(head); i++, p = p->next)
 		printf("%02X  ", (unsigned char)p->next->key);
-		p = p->next;
-	}
 	printf("... lldel\n");
 	lldeltail(head);
-	for (i = 0, p = head; i < lllen(head); i++) {
+	for (i = 0, p = head; i < lllen(head); i++, p = p->next)
 		printf("%02X  ", (unsigned char)p->next->key);
-		p = p->next;
-	}
 	printf("... lldeltail\n");
 	lldestroy(head);
 }

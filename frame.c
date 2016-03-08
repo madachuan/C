@@ -356,10 +356,9 @@ void fcs(void)
 			msgQReceive(mqfcs1, bufr, 15, NO_WAIT);
 			UINT32 id[13] = {0x380A9010, 0x400A9020, 0x48019030, 0x500A9040, 0x580A9050, 0x600A9060, 0x680A9070, 0x700A9080, 0x780A9090, 0x800A90A0, 0x880AC0B0, 0x900A80B0, 0x980A80B0};
 			int i;
-			for (i = 0; i < 13; i++) {
+			for (i = 0; i < 13; i++)
 				if (*(UINT32 *)(bufr + 1) == id[i])
 					break;
-			}
 			if (i > 12)
 				continue;
 			memcpy((char *)&fcsd.r + 10 * i, bufr + 5, 10);
@@ -429,10 +428,9 @@ void fcs(void)
 					fcsd.t.acs.mls |= (0x0002 << (7 - (i - 2)) * 2);
 					intUnlock(lockkey);
 				}
-				for (j = 0; j < 8; j++) {
+				for (j = 0; j < 8; j++)
 					if (*(char *)&fcsd.r.m[j].err)
 						break;
-				}
 				if (j < 8)
 					fcsd.t.acs.errm = 1;
 				else
@@ -714,12 +712,10 @@ void dacs(void)
 	FOREVER {
 		buft[2]++;
 		angle += (2 * pi / 600 / 50);
-		if (angle >= pi) {
+		if (angle >= pi)
 			angle -= 2 * pi;
-		}
-		if (angle <= -pi) {
+		if (angle <= -pi)
 			angle += 2 * pi;
-		}
 		buft[6] = (UINT32)((sin(angle) * 10 / 111 + 45.83072500) * 36000) & 0x000000FF;
 		buft[7] = ((UINT32)((sin(angle) * 10 / 111 + 45.83072500) * 36000) & 0x0000FF00) >> 8;
 		buft[8] = ((UINT32)((sin(angle) * 10 / 111 + 45.83072500) * 36000) & 0x00FF0000) >> 16;
