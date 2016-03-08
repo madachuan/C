@@ -16,17 +16,17 @@
 
 void dmcll(void)
 {
-	int i;
+	unsigned i;
 	struct cll *p = NULL;
 	struct cll *head = cllcreate();
 	for (i = 0, p = head; i < 2 * clllen(head, head->next); i++, p = p->next)
-		printf("%02X  ", (unsigned char)p->next->key);
+		printf("%02X  ", p->next->key);
 	printf("... cllcreate ... clllen\n");
 	cllinstail(head, head->next, 0x01);
 	cllinstail(head, head->next, 0x02);
 	cllinstail(head, head->next, 0x03);
 	for (i = 0, p = head; i < 2 * clllen(head, head->next); i++, p = p->next)
-		printf("%02X  ", (unsigned char)p->next->key);
+		printf("%02X  ", p->next->key);
 	printf("... cllinstail ... cllins\n");
 	printf("%02X ... cllmax\n", cllmax(head, head->next)->key);
 	printf("%02X ... cllmin\n", cllmin(head, head->next)->key);
@@ -83,7 +83,7 @@ struct cll *cllmin(struct cll *head, struct cll *p)
 	return (p->key < tmp->key ? p : tmp);
 }
 
-int clllen(struct cll *head, struct cll *p)
+unsigned clllen(struct cll *head, struct cll *p)
 {
 	if (!head)
 		exit(EFAULT);
@@ -96,7 +96,7 @@ int clllen(struct cll *head, struct cll *p)
 	return (1 + clllen(head, p->next));
 }
 
-void cllinstail(struct cll *head, struct cll *p, char key)
+void cllinstail(struct cll *head, struct cll *p, unsigned char key)
 {
 	if (!head)
 		exit(EFAULT);

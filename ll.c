@@ -16,86 +16,86 @@
 
 void dmll(void)
 {
-	int i;
+	unsigned i;
 	struct ll *p = NULL;
 	struct ll *head = llcreate();
 	for (i = 0, p = head; i < lllen(head); i++, p = p->next)
-		printf("%02X  ", (unsigned char)p->next->key);
+		printf("%02X  ", p->next->key);
 	printf("... llcreate ... lllen\n");
 	llbuild(head, 5, 0xCC);
 	for (i = 0, p = head; i < lllen(head); i++, p = p->next)
-		printf("%02X  ", (unsigned char)p->next->key);
+		printf("%02X  ", p->next->key);
 	printf("... llbuild\n");
 	llclean(head);
 	for (i = 0, p = head; i < lllen(head); i++, p = p->next)
-		printf("%02X  ", (unsigned char)p->next->key);
+		printf("%02X  ", p->next->key);
 	printf("... llclean\n");
-	char buf[9] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
+	unsigned char buf[9] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
 	llinit(head, 9, buf);
 	for (i = 0, p = head; i < lllen(head); i++, p = p->next)
-		printf("%02X  ", (unsigned char)p->next->key);
+		printf("%02X  ", p->next->key);
 	printf("... llinit\n");
 	printf("%02X  ... llmax\n", llmax(head)->key);
 	printf("%02X  ... llmin\n", llmin(head)->key);
-	char bufcpy[20];
+	unsigned char bufcpy[20];
 	llcpy(bufcpy, 9, head);
 	for (i = 0; i < sizeof(bufcpy); i++)
-		printf("%02X  ", (unsigned char)bufcpy[i]);
+		printf("%02X  ", bufcpy[i]);
 	printf("... llcpy\n");
 	llrev(head);
 	for (i = 0, p = head; i < lllen(head); i++, p = p->next)
-		printf("%02X  ", (unsigned char)p->next->key);
+		printf("%02X  ", p->next->key);
 	printf("... llrev ... llstrip ... lltail\n");
 	llrep(head, 0x01, 0x09);
 	llrep(head, 0x05, 0x09);
 	llrep(head, 0x09, 0xAA);
 	for (i = 0, p = head; i < lllen(head); i++, p = p->next)
-		printf("%02X  ", (unsigned char)p->next->key);
+		printf("%02X  ", p->next->key);
 	printf("... llrep\n");
 	printf("%d  ", llscan(head, 0xAA));
 	printf("... llscan\n");
 	lldelscan(head, 0xAA);
 	for (i = 0, p = head; i < lllen(head); i++, p = p->next)
-		printf("%02X  ", (unsigned char)p->next->key);
+		printf("%02X  ", p->next->key);
 	printf("... lldelscan\n");
 	printf("|%02X|  ", llfind(head, 0x04)->key);
 	for (i = 0, p = head; i < lllen(head); i++, p = p->next)
-		printf("%02X  ", (unsigned char)p->next->key);
+		printf("%02X  ", p->next->key);
 	printf("... llfind\n");
 	lldelfind(head, 0x04);
 	for (i = 0, p = head; i < lllen(head); i++, p = p->next)
-		printf("%02X  ", (unsigned char)p->next->key);
+		printf("%02X  ", p->next->key);
 	printf("... lldelfind\n");
 	struct ll *get = llget(head, 0x03);
 	printf("|%02X|  ", get->key);
 	for (i = 0, p = head; i < lllen(head); i++, p = p->next)
-		printf("%02X  ", (unsigned char)p->next->key);
+		printf("%02X  ", p->next->key);
 	printf("... llget\n");
 	lladd(head, get);
 	for (i = 0, p = head; i < lllen(head); i++, p = p->next)
-		printf("%02X  ", (unsigned char)p->next->key);
+		printf("%02X  ", p->next->key);
 	printf("... lladd\n");
 	get = llget(head, 0x07);
 	lladdtail(head, get);
 	for (i = 0, p = head; i < lllen(head); i++, p = p->next)
-		printf("%02X  ", (unsigned char)p->next->key);
+		printf("%02X  ", p->next->key);
 	printf("... lladdtail\n");
 	head = llbehead(head);
 	for (i = 0, p = head; i < lllen(head); i++, p = p->next)
-		printf("%02X  ", (unsigned char)p->next->key);
+		printf("%02X  ", p->next->key);
 	printf("... llbehead\n");
 	llins(head, 0xEE);
 	llinstail(head, 0xBB);
 	for (i = 0, p = head; i < lllen(head); i++, p = p->next)
-		printf("%02X  ", (unsigned char)p->next->key);
+		printf("%02X  ", p->next->key);
 	printf("... llins ... llinstail\n");
 	lldel(head);
 	for (i = 0, p = head; i < lllen(head); i++, p = p->next)
-		printf("%02X  ", (unsigned char)p->next->key);
+		printf("%02X  ", p->next->key);
 	printf("... lldel\n");
 	lldeltail(head);
 	for (i = 0, p = head; i < lllen(head); i++, p = p->next)
-		printf("%02X  ", (unsigned char)p->next->key);
+		printf("%02X  ", p->next->key);
 	printf("... lldeltail\n");
 	lldestroy(head);
 }
@@ -143,7 +143,7 @@ struct ll *llmin(struct ll *p)
 	return (p->next->key < tmp->key ? p->next : tmp);
 }
 
-struct ll *llfind(struct ll *p, char key)
+struct ll *llfind(struct ll *p, unsigned char key)
 {
 	if (!p)
 		exit(EFAULT);
@@ -154,7 +154,7 @@ struct ll *llfind(struct ll *p, char key)
 	return (llfind(p->next, key));
 }
 
-struct ll *llget(struct ll *p, char key)
+struct ll *llget(struct ll *p, unsigned char key)
 {
 	if (!p)
 		exit(EFAULT);
@@ -191,7 +191,7 @@ struct ll *llbehead(struct ll *head)
 	return (ret);
 }
 
-int lllen(struct ll *p)
+unsigned lllen(struct ll *p)
 {
 	if (!p)
 		exit(EFAULT);
@@ -200,7 +200,7 @@ int lllen(struct ll *p)
 	return (1 + lllen(p->next));
 }
 
-int llscan(struct ll *p, char key)
+unsigned llscan(struct ll *p, unsigned char key)
 {
 	if (!p)
 		exit(EFAULT);
@@ -211,7 +211,7 @@ int llscan(struct ll *p, char key)
 	return (llscan(p->next, key));
 }
 
-int lldelscan(struct ll *p, char key)
+unsigned lldelscan(struct ll *p, unsigned char key)
 {
 	if (!p)
 		exit(EFAULT);
@@ -228,7 +228,7 @@ int lldelscan(struct ll *p, char key)
 	return (lldelscan(p->next, key));
 }
 
-int llrep(struct ll *p, char key, char new)
+unsigned llrep(struct ll *p, unsigned char key, unsigned char new)
 {
 	if (!p)
 		exit(EFAULT);
@@ -241,7 +241,7 @@ int llrep(struct ll *p, char key, char new)
 	return (llrep(p->next, key, new));
 }
 
-void llins(struct ll *p, char key)
+void llins(struct ll *p, unsigned char key)
 {
 	if (!p)
 		exit(EFAULT);
@@ -253,7 +253,7 @@ void llins(struct ll *p, char key)
 	p->next->next = tmp;
 }
 
-void llinstail(struct ll *p, char key)
+void llinstail(struct ll *p, unsigned char key)
 {
 	if (!p)
 		exit(EFAULT);
@@ -309,7 +309,7 @@ void lldeltail(struct ll *p)
 	lldeltail(p->next);
 }
 
-void lldelfind(struct ll *p, char key)
+void lldelfind(struct ll *p, unsigned char key)
 {
 	if (!p)
 		exit(EFAULT);
@@ -324,7 +324,7 @@ void lldelfind(struct ll *p, char key)
 	lldelfind(p->next, key);
 }
 
-void llbuild(struct ll *p, int n, char key)
+void llbuild(struct ll *p, unsigned n, unsigned char key)
 {
 	if (!p)
 		exit(EFAULT);
@@ -334,7 +334,7 @@ void llbuild(struct ll *p, int n, char key)
 	llbuild(p, n - 1, key);
 }
 
-void llinit(struct ll *p, int n, char *buf)
+void llinit(struct ll *p, unsigned n, unsigned char *buf)
 {
 	if (!p)
 		exit(EFAULT);
@@ -347,7 +347,7 @@ void llinit(struct ll *p, int n, char *buf)
 	llinit(p->next, n - 1, buf + 1);
 }
 
-void llcpy(char *buf, int n, struct ll *p)
+void llcpy(unsigned char *buf, unsigned n, struct ll *p)
 {
 	if (!buf || !p)
 		exit(EFAULT);

@@ -15,4 +15,3 @@ void dgps(void);
 void dacs(void);
 void cani(void);
 void tmri(void);
-char chkxor(char *p, int n);

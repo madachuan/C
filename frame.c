@@ -48,7 +48,7 @@ int tacst;
 int tdcan;
 int tdgps;
 int tdacs;
-UINT16 counter;
+unsigned short counter;
 FCSD fcsd;
 MLSD mlsd;
 ETSD etsd;
@@ -112,7 +112,7 @@ void frame(void)
  */
 void rly(void)
 {
-	int i;
+	unsigned i;
 	for (i = 0; i < 8; i++)
 		closeJDQ(i + 1);
 }
@@ -145,34 +145,34 @@ void tmr(void)
 
 void canr(void)
 {
-	char bufr[13];
-	char buft[15];
+	unsigned char bufr[13];
+	unsigned char buft[15];
 	FOREVER {
 		msgQReceive(mqcanr, bufr, 13, WAIT_FOREVER);
-		UINT16 x = counter;
-		if ((UINT8)bufr[0] != 0x88)
+		unsigned short x = counter;
+		if (bufr[0] != 0x88)
 			continue;
 		memcpy(buft, bufr, 13);
-		memcpy(buft + 13, (char *)&x, 2);
+		memcpy(buft + 13, &x, 2);
 		msgQSend(mqfcs1, buft, 15, NO_WAIT, MSG_PRI_NORMAL);
 	}
 }
 
 void cant(void)
 {
-	char bufr[9];
-	static char buft[7][13];
-	UINT32 id[7] = {0x000A6000, 0x080A2000, 0x10FA0F00, 0x180A1000, 0x200A1000, 0x280A1000, 0xA80A0800};
+	unsigned char bufr[9];
+	static unsigned char buft[7][13];
+	unsigned long id[7] = {0x000A6000, 0x080A2000, 0x10FA0F00, 0x180A1000, 0x200A1000, 0x280A1000, 0xA80A0800};
 	FOREVER {
 		semTake(sbtmr, WAIT_FOREVER);
 		while (ERROR != msgQReceive(mqcant, bufr, 9, NO_WAIT)) {
-			char i = bufr[8];
-			char head = 0x88;
+			unsigned char i = bufr[8];
+			unsigned char head = 0x88;
 			memcpy(buft[i], &head, 1);
-			memcpy(buft[i] + 1, (char *)&id[i], 4);
+			memcpy(buft[i] + 1, &id[i], 4);
 			memcpy(buft[i] + 5, bufr, 8);
 		}
-		static int j;
+		static unsigned j;
 		switch (counter % 4) {
 		case 0:
 			HK_CAN_WRITE(1, buft[0]);
@@ -203,8 +203,8 @@ void gpsr(void)
 	static char bufr[256];
 	static double buft[14];
 	FOREVER {
-		int len = 0;
-		static int sum;
+		unsigned len = 0;
+		static unsigned sum;
 		len = read(com4, bufr + sum, 256);
 		if (sum == 0 && strstr(bufr, "$GPHPD,") != bufr)
 			continue;
@@ -278,7 +278,7 @@ void gpsr(void)
 		}
 		int lockkey = intLock();
 		counter = 0;
-		msgQSend(mqfcs2, (char *)&buft[i], sizeof(fcsd.r.gps), NO_WAIT, MSG_PRI_NORMAL);
+		msgQSend(mqfcs2, &buft[i], sizeof(fcsd.r.gps), NO_WAIT, MSG_PRI_NORMAL);
 		intUnlock(lockkey);
 		sum = 0;
 		memset(bufr, 0x00, 256);
@@ -288,12 +288,12 @@ void gpsr(void)
 void acsr(void)
 {
 	int com1 = open("/tjat/0", O_RDWR, 0);
-	static char bufr[256];
+	static unsigned char bufr[256];
 	FOREVER {
-		int len = 0;
-		static int sum;
+		unsigned len = 0;
+		static unsigned sum;
 		len = read(com1, bufr + sum, 256);
-		if (sum == 0 && (UINT8)bufr[0] != 0xA5)
+		if (sum == 0 && bufr[0] != 0xA5)
 			continue;
 		sum += len;
 		if (sum > 256) {
@@ -301,21 +301,21 @@ void acsr(void)
 			memset(bufr, 0x00, 256);
 			continue;
 		}
-		if (sum < (UINT8)bufr[1] + 2)
+		if (sum < bufr[1] + 2)
 			continue;
-		if ((UINT8)bufr[(UINT8)bufr[1] - 2] != 0xEE) {
+		if (bufr[bufr[1] - 2] != 0xEE) {
 			sum = 0;
 			memset(bufr, 0x00, 256);
 			continue;
 		}
-		if (bufr[(UINT8)bufr[1] - 1] != chkxor(&bufr[1], (UINT8)bufr[1] - 3)) {
+		if (bufr[bufr[1] - 1] != chkxor(&bufr[1], bufr[1] - 3)) {
 			sum = 0;
 			memset(bufr, 0x00, 256);
 			continue;
 		}
-		int i;
-		for (i = 3; i < (UINT8)bufr[1] - 3 - sizeof(fcsd.r.acs); i++) {
-			if ((UINT8)bufr[i] != 0xD3)
+		unsigned i;
+		for (i = 3; i < bufr[1] - 3 - sizeof(fcsd.r.acs); i++) {
+			if (bufr[i] != 0xD3)
 				continue;
 			if (bufr[i + sizeof(fcsd.r.acs) - 1] != chkxor(&bufr[i + 1], sizeof(fcsd.r.acs) - 2))
 				continue;
@@ -334,16 +334,16 @@ void acst(void)
 		fcsd.t.acs.len = sizeof(fcsd.t.acs);
 		fcsd.t.acs.ctr++;
 		fcsd.t.acs.end = 0xEE;
-		fcsd.t.acs.xor = chkxor((char *)&fcsd.t.acs, sizeof(fcsd.t.acs) - 3);
+		fcsd.t.acs.xor = chkxor(&fcsd.t.acs, sizeof(fcsd.t.acs) - 3);
 		int com1 = open("/tjat/0", O_RDWR, 0);
-		write(com1, (char *)&fcsd.t.acs, sizeof(fcsd.t.acs));
+		write(com1, &fcsd.t.acs, sizeof(fcsd.t.acs));
 		taskDelay(60);
 	}
 }
 
 void fcs(void)
 {
-	static UINT32 ev;
+	static unsigned long ev;
 	msgQEvStart(mqfcs1, VXEV01, EVENTS_SEND_IF_FREE);
 	msgQEvStart(mqfcs2, VXEV02, EVENTS_SEND_IF_FREE);
 	msgQEvStart(mqfcs3, VXEV03, EVENTS_SEND_IF_FREE);
@@ -352,17 +352,17 @@ void fcs(void)
 	FOREVER {
 		eventReceive(VXEV01 | VXEV02 | VXEV03 | VXEV04 | VXEV05, EVENTS_WAIT_ANY, WAIT_FOREVER, &ev);
 		if (ev & VXEV01) {
-			char bufr[15];
+			unsigned char bufr[15];
 			msgQReceive(mqfcs1, bufr, 15, NO_WAIT);
-			UINT32 id[13] = {0x380A9010, 0x400A9020, 0x48019030, 0x500A9040, 0x580A9050, 0x600A9060, 0x680A9070, 0x700A9080, 0x780A9090, 0x800A90A0, 0x880AC0B0, 0x900A80B0, 0x980A80B0};
-			int i;
+			unsigned long id[13] = {0x380A9010, 0x400A9020, 0x48019030, 0x500A9040, 0x580A9050, 0x600A9060, 0x680A9070, 0x700A9080, 0x780A9090, 0x800A90A0, 0x880AC0B0, 0x900A80B0, 0x980A80B0};
+			unsigned i;
 			for (i = 0; i < 13; i++)
-				if (*(UINT32 *)(bufr + 1) == id[i])
+				if (*(unsigned long *)(bufr + 1) == id[i])
 					break;
 			if (i > 12)
 				continue;
-			memcpy((char *)&fcsd.r + 10 * i, bufr + 5, 10);
-			int j;
+			memcpy((unsigned char *)&fcsd.r + 10 * i, bufr + 5, 10);
+			unsigned j;
 			switch (i) {
 			case 0:
 				etsd.t.ir.find = fcsd.r.ir.find;
@@ -375,7 +375,7 @@ void fcs(void)
 				etsd.t.ir.azi = fcsd.r.ir.azi;
 				etsd.t.ir.pit = fcsd.r.ir.pit;
 				etsd.t.ir.laser = fcsd.r.ir.laser;
-				etsd.t.ir.stamp = ((UINT32)(fcsd.r.gps.time * 1000) + fcsd.r.ir.stamp) % 30000;
+				etsd.t.ir.stamp = ((unsigned long)(fcsd.r.gps.time * 1000) + fcsd.r.ir.stamp) % 30000;
 				break;
 			case 1:
 				etsd.t.sv.mov = fcsd.r.sv.mov;
@@ -386,7 +386,7 @@ void fcs(void)
 					fcsd.t.acs.errsv = 0;
 				etsd.t.sv.azi = fcsd.r.sv.azi;
 				etsd.t.sv.pit = fcsd.r.sv.pit;
-				etsd.t.sv.stamp = ((UINT32)(fcsd.r.gps.time * 1000) + fcsd.r.sv.stamp) % 30000;
+				etsd.t.sv.stamp = ((unsigned long)(fcsd.r.gps.time * 1000) + fcsd.r.sv.stamp) % 30000;
 				break;
 			case 2:
 			case 3:
@@ -409,8 +409,8 @@ void fcs(void)
 				mlsd.t.m[i - 2].battery = fcsd.r.m[i - 2].battery;
 				mlsd.t.m[i - 2].feedback = fcsd.r.m[i - 2].feedback;
 				mlsd.t.m[i - 2].engine = fcsd.r.m[i - 2].engine;
-				*(char *)&mlsd.t.m[i - 2].err = *(char *)&fcsd.r.m[i - 2].err;
-				if(*(char *)&fcsd.r.m[i - 2].err) {
+				*(unsigned char *)&mlsd.t.m[i - 2].err = *(unsigned char *)&fcsd.r.m[i - 2].err;
+				if(*(unsigned char *)&fcsd.r.m[i - 2].err) {
 					int lockkey = intLock();
 					fcsd.t.acs.mls &= ~(0xC000 >> (i - 2) * 2);
 					fcsd.t.acs.mls |= (0x0003 << (7 - (i - 2)) * 2);
@@ -429,14 +429,14 @@ void fcs(void)
 					intUnlock(lockkey);
 				}
 				for (j = 0; j < 8; j++)
-					if (*(char *)&fcsd.r.m[j].err)
+					if (*(unsigned char *)&fcsd.r.m[j].err)
 						break;
 				if (j < 8)
 					fcsd.t.acs.errm = 1;
 				else
 					fcsd.t.acs.errm = 0;
 				for (j = 0; j < 8; j++) {
-					if (*(char *)&fcsd.r.m[j].err)
+					if (*(unsigned char *)&fcsd.r.m[j].err)
 						etsd.t.m.err |= (0x01 << j);
 					else
 						etsd.t.m.err &= ~(0x01 << j);
@@ -501,39 +501,39 @@ void fcs(void)
 			default:
 				break;
 			}
-			msgQSend(mqets, (char *)&etsd.t, sizeof(etsd.t), NO_WAIT, MSG_PRI_NORMAL);
-			msgQSend(mqmls, (char *)&mlsd.t, sizeof(mlsd.t), NO_WAIT, MSG_PRI_NORMAL);
-			int k;
+			msgQSend(mqets, &etsd.t, sizeof(etsd.t), NO_WAIT, MSG_PRI_NORMAL);
+			msgQSend(mqmls, &mlsd.t, sizeof(mlsd.t), NO_WAIT, MSG_PRI_NORMAL);
+			unsigned k;
 			if (i > 1 && i < 10)
 				k = 2;
 			else if (i > 9)
 				k = i - 6;
 			else
 				k = i;
-			char buft[9];
+			unsigned char buft[9];
 			buft[8] = k;
-			memcpy(buft, (char *)&fcsd.t + 8 * k, 8);
+			memcpy(buft, (unsigned char *)&fcsd.t + 8 * k, 8);
 			msgQSend(mqcant, buft, 9, NO_WAIT, MSG_PRI_NORMAL);
 		}
 		if (ev & VXEV02) {
-			msgQReceive(mqfcs2, (char *)&fcsd.r.gps, sizeof(fcsd.r.gps), NO_WAIT);
-			etsd.t.gps.stamp = ((UINT32)(fcsd.r.gps.time * 1000)) % 30000;
-			etsd.t.gps.heading = fcsd.t.dp.heading = (INT16)(fcsd.r.gps.heading / 360 * 65536);
-			etsd.t.gps.lat = fcsd.t.dp.lat = fcsd.t.acs.lat = (UINT32)(fabs(fcsd.r.gps.lat) * 60 * 60 * 10);
+			msgQReceive(mqfcs2, &fcsd.r.gps, sizeof(fcsd.r.gps), NO_WAIT);
+			etsd.t.gps.stamp = (unsigned long)(fcsd.r.gps.time * 1000) % 30000;
+			etsd.t.gps.heading = fcsd.t.dp.heading = (short)(fcsd.r.gps.heading / 360 * 65536);
+			etsd.t.gps.lat = fcsd.t.dp.lat = fcsd.t.acs.lat = (unsigned long)(fabs(fcsd.r.gps.lat) * 60 * 60 * 10);
 			if (fcsd.r.gps.lat > 0)
 				etsd.t.gps.ns = fcsd.t.dp.ns = fcsd.t.acs.ns = 0;
 			else
 				etsd.t.gps.ns = fcsd.t.dp.ns = fcsd.t.acs.ns = 1;
-			etsd.t.gps.lon = fcsd.t.dp.lon = fcsd.t.acs.lon = (UINT32)(fabs(fcsd.r.gps.lon) * 60 * 60 * 10);
+			etsd.t.gps.lon = fcsd.t.dp.lon = fcsd.t.acs.lon = (unsigned long)(fabs(fcsd.r.gps.lon) * 60 * 60 * 10);
 			if (fcsd.r.gps.lon > 0)
 				etsd.t.gps.ew = fcsd.t.dp.ew = fcsd.t.acs.ew = 0;
 			else
 				etsd.t.gps.ew = fcsd.t.dp.ew = fcsd.t.acs.ew = 1;
-			etsd.t.gps.alt = fcsd.t.dp.alt = fcsd.t.acs.alt = (INT16)(fcsd.r.gps.alt / 10);
-			msgQSend(mqets, (char *)&etsd.t, sizeof(etsd.t), NO_WAIT, MSG_PRI_NORMAL);
+			etsd.t.gps.alt = fcsd.t.dp.alt = fcsd.t.acs.alt = (short)(fcsd.r.gps.alt / 10);
+			msgQSend(mqets, &etsd.t, sizeof(etsd.t), NO_WAIT, MSG_PRI_NORMAL);
 		}
 		if (ev & VXEV03) {
-			msgQReceive(mqfcs3, (char *)&fcsd.r.acs, sizeof(fcsd.r.acs), NO_WAIT);
+			msgQReceive(mqfcs3, &fcsd.r.acs, sizeof(fcsd.r.acs), NO_WAIT);
 			etsd.t.acs.lat = fcsd.r.acs.lat;
 			etsd.t.acs.ns = fcsd.r.acs.ns;
 			etsd.t.acs.lon = fcsd.r.acs.lon;
@@ -543,12 +543,12 @@ void fcs(void)
 			etsd.t.acs.vy = fcsd.r.acs.vy;
 			etsd.t.acs.vz = fcsd.r.acs.vz;
 			etsd.t.acs.stamp = fcsd.r.acs.stamp;
-			fcsd.t.dp.spd = (char)sqrt(pow(fcsd.r.acs.vx, 2) + pow(fcsd.r.acs.vy, 2) + pow(fcsd.r.acs.vz, 2));
-			msgQSend(mqets, (char *)&etsd.t, sizeof(etsd.t), NO_WAIT, MSG_PRI_NORMAL);
-			msgQSend(mqacst, (char *)&fcsd.t.acs, sizeof(fcsd.t.acs), NO_WAIT, MSG_PRI_NORMAL);
+			fcsd.t.dp.spd = sqrt(pow(fcsd.r.acs.vx, 2) + pow(fcsd.r.acs.vy, 2) + pow(fcsd.r.acs.vz, 2));
+			msgQSend(mqets, &etsd.t, sizeof(etsd.t), NO_WAIT, MSG_PRI_NORMAL);
+			msgQSend(mqacst, &fcsd.t.acs, sizeof(fcsd.t.acs), NO_WAIT, MSG_PRI_NORMAL);
 		}
 		if (ev & VXEV04) {
-			msgQReceive(mqfcs4, (char *)&etsd.r, sizeof(etsd.r), NO_WAIT);
+			msgQReceive(mqfcs4, &etsd.r, sizeof(etsd.r), NO_WAIT);
 			fcsd.t.ir.ir = etsd.r.ir.ir;
 			fcsd.t.ir.get = etsd.r.ir.get;
 			fcsd.t.ir.azi = etsd.r.ir.azi;
@@ -563,17 +563,17 @@ void fcs(void)
 			fcsd.t.dp.attack = etsd.r.guide.attack;
 			fcsd.t.dp.remain = etsd.r.guide.remain;
 			fcsd.t.dp.dist = etsd.r.guide.dist;
-			fcsd.t.acs.ppi = fcsd.t.dp.ppi = etsd.r.sv.azi + (INT16)(fcsd.r.gps.heading / 360 * 65536);
+			fcsd.t.acs.ppi = fcsd.t.dp.ppi = etsd.r.sv.azi + (short)(fcsd.r.gps.heading / 360 * 65536);
 		}
 		if (ev & VXEV05) {
-			msgQReceive(mqfcs5, (char *)&mlsd.r, sizeof(mlsd.r), NO_WAIT);
+			msgQReceive(mqfcs5, &mlsd.r, sizeof(mlsd.r), NO_WAIT);
 			fcsd.t.m.umask = mlsd.r.umask;
 			fcsd.t.m.mod = mlsd.r.m[0].mod;
 			fcsd.t.m.tail = mlsd.r.m[0].tail;
 			fcsd.t.m.ajc = mlsd.r.m[0].ajc;
-			int i;
+			unsigned i;
 			for (i = 0; i < 8; i++) {
-				UINT32 tmp = 0;
+				unsigned long tmp = 0;
 				if (mlsd.r.m[i].chk)
 					tmp |= 0x00000008;
 				else
@@ -602,7 +602,7 @@ void fcs(void)
 void mls(void)
 {
 	FOREVER {
-		msgQReceive(mqmls, (char *)&mlsd.t, sizeof(mlsd.t), WAIT_FOREVER);
+		msgQReceive(mqmls, &mlsd.t, sizeof(mlsd.t), WAIT_FOREVER);
 	}
 }
 
@@ -615,13 +615,13 @@ void dcan(void)
 {
 	FOREVER {
 		semTake(sbtmr, WAIT_FOREVER);
-		char buft[15] = {0x88};
-		UINT32 id[13] = {0x380A9010, 0x400A9020, 0x48019030, 0x500A9040, 0x580A9050, 0x600A9060, 0x680A9070, 0x700A9080, 0x780A9090, 0x800A90A0, 0x880AC0B0, 0x900A80B0, 0x980A80B0};
-		static int i;
-		static int j;
+		unsigned char buft[15] = {0x88};
+		unsigned long id[13] = {0x380A9010, 0x400A9020, 0x48019030, 0x500A9040, 0x580A9050, 0x600A9060, 0x680A9070, 0x700A9080, 0x780A9090, 0x800A90A0, 0x880AC0B0, 0x900A80B0, 0x980A80B0};
+		static unsigned i;
+		static unsigned j;
 		switch (counter % 4) {
 		case 0:
-			memcpy(buft + 1, (char *)&id[0], 4);
+			memcpy(buft + 1, &id[0], 4);
 			buft[5] = 0x28;
 			buft[6] = 0x00;
 			buft[7] = fcsd.t.ir.azi;
@@ -635,7 +635,7 @@ void dcan(void)
 			msgQSend(mqfcs1, buft, 15, NO_WAIT, MSG_PRI_NORMAL);
 			break;
 		case 1:
-			memcpy(buft + 1, (char *)&id[1], 4);
+			memcpy(buft + 1, &id[1], 4);
 			if (fcsd.t.sv.sv)
 				buft[5] = 0x10;
 			else
@@ -654,14 +654,14 @@ void dcan(void)
 		case 2:
 			if (i > 7)
 				i = 0;
-			memcpy(buft + 1, (char *)&id[2 + i], 4);
+			memcpy(buft + 1, &id[2 + i], 4);
 			i++;
 			break;
 		case 3:
 			if (j > 3)
 				j = 0;
 			if (j < 3)
-				memcpy(buft + 1, (char *)&id[10 + j], 4);
+				memcpy(buft + 1, &id[10 + j], 4);
 			switch (j) {
 			case 0:
 				buft[5] = 0xEB;
@@ -699,14 +699,14 @@ void dgps(void)
 	FOREVER {
 		buft[1]++;
 		counter = 0;
-		msgQSend(mqfcs2, (char *)buft, sizeof(buft), NO_WAIT, MSG_PRI_NORMAL);
+		msgQSend(mqfcs2, buft, sizeof(buft), NO_WAIT, MSG_PRI_NORMAL);
 		taskDelay(60);
 	}
 }
 
 void dacs(void)
 {
-	char buft[24] = {0xA5, 22, 0, 0xD3, 0xFF, 66, 0, 0, 0, 0, 0, 0, 0x64, 0, 3, 3, 3, 0xD8, 0x0E, 0x00, 0xEE, 0x00, 0x00, 0x1C};
+	unsigned char buft[24] = {0xA5, 22, 0, 0xD3, 0xFF, 66, 0, 0, 0, 0, 0, 0, 0x64, 0, 3, 3, 3, 0xD8, 0x0E, 0x00, 0xEE, 0x00, 0x00, 0x1C};
 	double angle = 0;
 	double pi = 3.141592653589793;
 	FOREVER {
@@ -716,17 +716,17 @@ void dacs(void)
 			angle -= 2 * pi;
 		if (angle <= -pi)
 			angle += 2 * pi;
-		buft[6] = (UINT32)((sin(angle) * 10 / 111 + 45.83072500) * 36000) & 0x000000FF;
-		buft[7] = ((UINT32)((sin(angle) * 10 / 111 + 45.83072500) * 36000) & 0x0000FF00) >> 8;
-		buft[8] = ((UINT32)((sin(angle) * 10 / 111 + 45.83072500) * 36000) & 0x00FF0000) >> 16;
-		buft[9] = (UINT32)((cos(angle) * 10 / 111 / cos(45.83072500 / 180 * pi) + 122.61647500) * 36000) & 0x000000FF;
-		buft[10] = ((UINT32)((cos(angle) * 10 / 111 / cos(45.83072500 / 180 * pi) + 122.61647500) * 36000) & 0x0000FF00) >> 8;
-		buft[11] = ((UINT32)((cos(angle) * 10 / 111 / cos(45.83072500 / 180 * pi) + 122.61647500) * 36000) & 0x00FF0000) >> 16;
-		buft[17] = (UINT32)(fcsd.r.gps.time * 1000) % 30000;
-		buft[18] = ((UINT32)(fcsd.r.gps.time * 1000) % 30000) >> 8;
+		buft[6] = (unsigned long)((sin(angle) * 10 / 111 + 45.83072500) * 36000) & 0x000000FF;
+		buft[7] = ((unsigned long)((sin(angle) * 10 / 111 + 45.83072500) * 36000) & 0x0000FF00) >> 8;
+		buft[8] = ((unsigned long)((sin(angle) * 10 / 111 + 45.83072500) * 36000) & 0x00FF0000) >> 16;
+		buft[9] = (unsigned long)((cos(angle) * 10 / 111 / cos(45.83072500 / 180 * pi) + 122.61647500) * 36000) & 0x000000FF;
+		buft[10] = ((unsigned long)((cos(angle) * 10 / 111 / cos(45.83072500 / 180 * pi) + 122.61647500) * 36000) & 0x0000FF00) >> 8;
+		buft[11] = ((unsigned long)((cos(angle) * 10 / 111 / cos(45.83072500 / 180 * pi) + 122.61647500) * 36000) & 0x00FF0000) >> 16;
+		buft[17] = (unsigned long)(fcsd.r.gps.time * 1000) % 30000;
+		buft[18] = ((unsigned long)(fcsd.r.gps.time * 1000) % 30000) >> 8;
 		buft[19] = chkxor(buft + 4, 15);
 		buft[21] = chkxor(buft + 1, 19);
-		msgQSend(mqfcs3, (char *)buft + 3, sizeof(buft) - 7, NO_WAIT, MSG_PRI_NORMAL);
+		msgQSend(mqfcs3, buft + 3, sizeof(buft) - 7, NO_WAIT, MSG_PRI_NORMAL);
 		taskDelay(60);
 	}
 }
@@ -741,7 +741,7 @@ void dacs(void)
  */
 void cani(void)
 {
-	static char buf[13];
+	static unsigned char buf[13];
 	if (!(INTERRUPT() & 0x01))
 		return;
 	if (!HK_RD_IR(1)) {

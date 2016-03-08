@@ -1,6 +1,6 @@
-void sorti(char *buf, int n);
-void sortm(char *buf, int n);
-void sortq(char *buf, int n);
-void merge(char *buf, int nl, int nr);
-int part(char *buf, int n);
-void exchange(char *x, char *y);
+void sorti(unsigned char *buf, unsigned n);
+void sortm(unsigned char *buf, unsigned n);
+void sortq(unsigned char *buf, unsigned n);
+void merge(unsigned char *buf, unsigned nl, unsigned nr);
+unsigned part(unsigned char *buf, unsigned n);
+void exchange(unsigned char *x, unsigned char *y);

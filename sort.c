@@ -15,29 +15,29 @@
 
 void dmsort(void)
 {
-	int i;
-	char bufi[21] = {20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0};
+	unsigned i;
+	unsigned char bufi[21] = {20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0};
 	sorti(bufi, 21);
 	for (i = 0; i < 21; i++)
-		printf("%2d ", (unsigned char)bufi[i]);
+		printf("%2d ", bufi[i]);
 	printf("... sorti\n");
-	char bufm[21] = {20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0};
+	unsigned char bufm[21] = {20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0};
 	sortm(bufm, 21);
 	for (i = 0; i < 21; i++)
-		printf("%2d ", (unsigned char)bufm[i]);
+		printf("%2d ", bufm[i]);
 	printf("... sortm\n");
-	char bufq[21] = {20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0};
+	unsigned char bufq[21] = {20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0};
 	sortq(bufq, 21);
 	for (i = 0; i < 21; i++)
-		printf("%2d ", (unsigned char)bufq[i]);
+		printf("%2d ", bufq[i]);
 	printf("... sortq\n");
 }
 
-void sorti(char *buf, int n)
+void sorti(unsigned char *buf, unsigned n)
 {
-	int i = 1;
+	unsigned i = 1;
 	while (i < n) {
-		char tmp = buf[i];
+		unsigned char tmp = buf[i];
 		int j = i - 1;
 		while (j >= 0 && buf[j] > tmp) {
 			buf[j + 1] = buf[j];
@@ -48,33 +48,33 @@ void sorti(char *buf, int n)
 	}
 }
 
-void sortm(char *buf, int n)
+void sortm(unsigned char *buf, unsigned n)
 {
 	if (n < 2)
 		return;
-	int nl = n / 2 + n % 2;
-	int nr = n - nl;
+	unsigned nl = n / 2 + n % 2;
+	unsigned nr = n - nl;
 	sortm(buf, nl);
 	sortm(buf + nl, nr);
 	merge(buf, nl, nr);
 }
 
-void sortq(char *buf, int n)
+void sortq(unsigned char *buf, unsigned n)
 {
 	if (n < 2)
 		return;
-	int m = part(buf, n);
+	unsigned m = part(buf, n);
 	sortq(buf, m);
 	sortq(buf + m + 1, n - m - 1);
 }
 
-void merge(char *buf, int nl, int nr)
+void merge(unsigned char *buf, unsigned nl, unsigned nr)
 {
-	int i = 0;
-	int j = 0;
-	int k = 0;
-	char bufl[nl];
-	char bufr[nr];
+	unsigned i = 0;
+	unsigned j = 0;
+	unsigned k = 0;
+	unsigned char bufl[nl];
+	unsigned char bufr[nr];
 	memcpy(bufl, buf, nl);
 	memcpy(bufr, buf + nl, nr);
 	while (i < nl || j < nr) {
@@ -95,10 +95,10 @@ void merge(char *buf, int nl, int nr)
 	}
 }
 
-int part(char *buf, int n)
+unsigned part(unsigned char *buf, unsigned n)
 {
-	int i = 0;
-	int j = 0;
+	unsigned i = 0;
+	unsigned j = 0;
 	while (i < n - 1) {
 		if (buf[i] < buf[n - 1]) {
 			exchange(&buf[i], &buf[j]);
@@ -110,9 +110,9 @@ int part(char *buf, int n)
 	return (j);
 }
 
-void exchange(char *x, char *y)
+void exchange(unsigned char *x, unsigned char *y)
 {
-	char tmp = *x;
+	unsigned char tmp = *x;
 	*x = *y;
 	*y = tmp;
 }
