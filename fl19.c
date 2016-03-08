@@ -21,8 +21,8 @@
 #include <intLib.h>
 #include <iv.h>
 
-#include "frame.h"
-#include "databases.h"
+#include "fl19.h"
+#include "fl19protocol.h"
 #include "chk.h"
 #include "ll.h"
 
