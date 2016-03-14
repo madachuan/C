@@ -24,7 +24,6 @@
 #include "fl19.h"
 #include "fl19protocol.h"
 #include "chk.h"
-#include "ll.h"
 
 SEM_ID sbtmr;
 MSG_Q_ID mqcanr;
@@ -101,7 +100,7 @@ void frame(void)
 	tdgps = taskSpawn("dgps", 100, VX_FP_TASK, 10000, (FUNCPTR)dgps, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	tdacs = taskSpawn("dacs", 100, VX_FP_TASK, 10000, (FUNCPTR)dacs, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
- *			|
+/*			|
  * FRIST LEVEL END	|
  * =====================/
  */
@@ -223,10 +222,10 @@ void gpsr(void)
 			continue;
 		}
 		if (*(end - 2) >= '0' && *(end - 2) <= '9') {
-			if (*(end - 2) - 48 != chk(&bufr[1], end - 4 - bufr) >> 4)
+			if (*(end - 2) - 48 != chkxor(&bufr[1], end - 4 - bufr) >> 4)
 				continue;
 		} else if (*(end - 2) >= 'A' && *(end - 2) <= 'F') {
-			if (*(end - 2) - 55 != chk(&bufr[1], end - 4 - bufr) >> 4)
+			if (*(end - 2) - 55 != chkxor(&bufr[1], end - 4 - bufr) >> 4)
 				continue;
 		} else {
 			sum = 0;
@@ -234,10 +233,10 @@ void gpsr(void)
 			continue;
 		}
 		if (*(end - 1) >= '0' && *(end - 1) <= '9') {
-			if (*(end - 1) - 48 != (chk(&bufr[1], end - 4 - bufr) & 0x0F))
+			if (*(end - 1) - 48 != (chkxor(&bufr[1], end - 4 - bufr) & 0x0F))
 				continue;
 		} else if (*(end - 1) >= 'A' && *(end - 1) <= 'F') {
-			if (*(end - 1) - 55 != (chk(&bufr[1], end - 4 - bufr) & 0x0F))
+			if (*(end - 1) - 55 != (chkxor(&bufr[1], end - 4 - bufr) & 0x0F))
 				continue;
 		} else {
 			sum = 0;
@@ -272,7 +271,7 @@ void gpsr(void)
 				buft[i] += tmp;
 				tmp *= 10;
 			} else if (deci == -1) {
-				buft[i] += double(*p) * pow(10, deci * n);
+				buft[i] += *p * pow(10, deci);
 				deci--;
 			}
 		}
