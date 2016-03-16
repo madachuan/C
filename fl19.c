@@ -161,16 +161,16 @@ void cant(void)
 	const unsigned long id[7] = {0x000A6000, 0x080A2000, 0x10FA0F00, 0x180A1000, 0x200A1000, 0x280A1000, 0xA80A0800};
 	unsigned char bufr[9];
 	unsigned char buft[7][13];
+	unsigned char i;
+	for (i = 0; i < 7; i++) {
+		buft[i][0] = 0x88;
+		memcpy(buft[i] + 1, &id[i], sizeof(id[i]));
+	}
 	FOREVER {
 		semTake(sbtmr, WAIT_FOREVER);
-		while (ERROR != msgQReceive(mqcant, bufr, 9, NO_WAIT)) {
-			unsigned char i = bufr[8];
-			unsigned char head = 0x88;
-			memcpy(buft[i], &head, 1);
-			memcpy(buft[i] + 1, &id[i], 4);
-			memcpy(buft[i] + 5, bufr, 8);
-		}
-		static unsigned j;
+		while (ERROR != msgQReceive(mqcant, bufr, 9, NO_WAIT))
+			memcpy(buft[bufr[8]] + 5, bufr, 8);
+		static unsigned char i;
 		switch (counter % 4) {
 		case 0:
 			HK_CAN_WRITE(1, buft[0]);
@@ -184,10 +184,10 @@ void cant(void)
 			/*////////////////////////////relay*/
 			break;
 		case 3:
-			if (j > 3)
-				j = 0;
-			HK_CAN_WRITE(1, buft[3 + j]);
-			j++;
+			if (i > 3)
+				i = 0;
+			HK_CAN_WRITE(1, buft[3 + i]);
+			i++;
 			break;
 		default:
 			break;
