@@ -158,9 +158,9 @@ void canr(void)
 
 void cant(void)
 {
+	const unsigned long id[7] = {0x000A6000, 0x080A2000, 0x10FA0F00, 0x180A1000, 0x200A1000, 0x280A1000, 0xA80A0800};
 	unsigned char bufr[9];
 	unsigned char buft[7][13];
-	unsigned long id[7] = {0x000A6000, 0x080A2000, 0x10FA0F00, 0x180A1000, 0x200A1000, 0x280A1000, 0xA80A0800};
 	FOREVER {
 		semTake(sbtmr, WAIT_FOREVER);
 		while (ERROR != msgQReceive(mqcant, bufr, 9, NO_WAIT)) {
