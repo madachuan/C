@@ -8,8 +8,8 @@
  *	| Feb. 1st 2016	| Mon. 23:58	| Created by madachuan.
  */
 
-#include <math.h>
 #include <string.h>
+#include <math.h>
 
 #include <vxWorks.h>
 #include <semLib.h>
