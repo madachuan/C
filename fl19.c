@@ -150,11 +150,10 @@ void canr(void)
 	unsigned char buft[15];
 	FOREVER {
 		msgQReceive(mqcanr, bufr, 13, WAIT_FOREVER);
-		unsigned short x = counter;
+		memcpy(buft + 13, &counter, sizeof(counter));
 		if (bufr[0] != 0x88)
 			continue;
 		memcpy(buft, bufr, 13);
-		memcpy(buft + 13, &x, 2);
 		msgQSend(mqfcs1, buft, 15, NO_WAIT, MSG_PRI_NORMAL);
 	}
 }
