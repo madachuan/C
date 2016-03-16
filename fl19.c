@@ -130,10 +130,8 @@ void com(void)
 	tyCoXRPCIDrv();
 	tyCoXRPCIDevCreate("/tjat/0", 0, 256, 256, 32, 32);
 	tyCoXRPCIDevCreate("/tjat/3", 3, 256, 256, 32, 32);
-	int com1 = open("/tjat/0", O_RDWR, 0);
-	int com4 = open("/tjat/3", O_RDWR, 0);
-	ioctl(com1, FIOBAUDRATE, 115200);
-	ioctl(com4, FIOBAUDRATE, 115200);
+	ioctl(open("/tjat/0", O_RDWR, 0), FIOBAUDRATE, 115200);
+	ioctl(open("/tjat/3", O_RDWR, 0), FIOBAUDRATE, 115200);
 }
 
 void tmr(void)
