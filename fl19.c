@@ -56,7 +56,7 @@ ETSD etsd;
  * =====================\
  * FRIST LEVEL BEGIN	|
  */
-void frame(void)
+void fl19(void)
 {
 	/*------\
 	| OS	|
@@ -96,9 +96,11 @@ void frame(void)
 	/*------\
 	| Dummy	|
 	\------*/
+#if 0
 	tdcan = taskSpawn("dcan", 100, VX_FP_TASK, 10000, (FUNCPTR)dcan, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	tdgps = taskSpawn("dgps", 100, VX_FP_TASK, 10000, (FUNCPTR)dgps, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	tdacs = taskSpawn("dacs", 100, VX_FP_TASK, 10000, (FUNCPTR)dacs, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+#endif
 }
 /*			|
  * FRIST LEVEL END	|
