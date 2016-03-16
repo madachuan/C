@@ -151,10 +151,10 @@ void canr(void)
 	FOREVER {
 		msgQReceive(mqcanr, bufr, 13, WAIT_FOREVER);
 		memcpy(buft + 13, &counter, sizeof(counter));
-		if (bufr[0] != 0x88)
-			continue;
-		memcpy(buft, bufr, 13);
-		msgQSend(mqfcs1, buft, 15, NO_WAIT, MSG_PRI_NORMAL);
+		if (bufr[0] == 0x88) {
+			memcpy(buft, bufr, 13);
+			msgQSend(mqfcs1, buft, 15, NO_WAIT, MSG_PRI_NORMAL);
+		}
 	}
 }
 
