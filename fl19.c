@@ -159,7 +159,7 @@ void canr(void)
 void cant(void)
 {
 	unsigned char bufr[9];
-	static unsigned char buft[7][13];
+	unsigned char buft[7][13];
 	unsigned long id[7] = {0x000A6000, 0x080A2000, 0x10FA0F00, 0x180A1000, 0x200A1000, 0x280A1000, 0xA80A0800};
 	FOREVER {
 		semTake(sbtmr, WAIT_FOREVER);
@@ -198,8 +198,8 @@ void cant(void)
 void gpsr(void)
 {
 	int com4 = open("/tjat/3", O_RDWR, 0);
-	static char bufr[256];
-	static double buft[14];
+	char bufr[256];
+	double buft[14];
 	FOREVER {
 		unsigned len = 0;
 		static unsigned sum;
@@ -286,7 +286,7 @@ void gpsr(void)
 void acsr(void)
 {
 	int com1 = open("/tjat/0", O_RDWR, 0);
-	static unsigned char bufr[256];
+	unsigned char bufr[256];
 	FOREVER {
 		unsigned len = 0;
 		static unsigned sum;
@@ -341,7 +341,7 @@ void acst(void)
 
 void fcs(void)
 {
-	static unsigned long ev;
+	unsigned long ev;
 	msgQEvStart(mqfcs1, VXEV01, EVENTS_SEND_IF_FREE);
 	msgQEvStart(mqfcs2, VXEV02, EVENTS_SEND_IF_FREE);
 	msgQEvStart(mqfcs3, VXEV03, EVENTS_SEND_IF_FREE);
@@ -739,7 +739,7 @@ void dacs(void)
  */
 void cani(void)
 {
-	static unsigned char buf[13];
+	unsigned char buf[13];
 	if (!(INTERRUPT() & 0x01))
 		return;
 	if (!HK_RD_IR(1)) {
