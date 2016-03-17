@@ -198,11 +198,10 @@ void gpsr(void)
 {
 	static char bufr[256];
 	static double buft[14];
-	int com4 = open("/tjat/3", O_RDWR, 0);
 	FOREVER {
 		unsigned len = 0;
 		static unsigned sum;
-		len = read(com4, bufr + sum, 256 - sum);
+		len = read(open("/tjat/3", O_RDWR, 0), bufr + sum, 256 - sum);
 		if (sum == 0 && strstr(bufr, "$GPHPD,") != bufr)
 			continue;
 		sum += len;
