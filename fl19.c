@@ -84,8 +84,8 @@ void fl19(void)
 	\--------------*/
 	tcanr = taskSpawn("canr", 100, VX_FP_TASK, 10000, (FUNCPTR)canr, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	tcant = taskSpawn("cant", 100, VX_FP_TASK, 10000, (FUNCPTR)cant, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-#if 0
 	tgpsr = taskSpawn("gpsr", 100, VX_FP_TASK, 10000, (FUNCPTR)gpsr, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+#if 0
 	tacsr = taskSpawn("acsr", 100, VX_FP_TASK, 10000, (FUNCPTR)acsr, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	tacst = taskSpawn("acst", 100, VX_FP_TASK, 10000, (FUNCPTR)acst, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	tfcs = taskSpawn("fcs", 100, VX_FP_TASK, 10000, (FUNCPTR)fcs, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
@@ -196,13 +196,13 @@ void cant(void)
 
 void gpsr(void)
 {
+	static char bufr[256];
+	static double buft[14];
 	int com4 = open("/tjat/3", O_RDWR, 0);
-	char bufr[256];
-	double buft[14];
 	FOREVER {
 		unsigned len = 0;
 		static unsigned sum;
-		len = read(com4, bufr + sum, 256);
+		len = read(com4, bufr + sum, 256 - sum);
 		if (sum == 0 && strstr(bufr, "$GPHPD,") != bufr)
 			continue;
 		sum += len;
@@ -220,22 +220,34 @@ void gpsr(void)
 			continue;
 		}
 		if (*(end - 2) >= '0' && *(end - 2) <= '9') {
-			if (*(end - 2) - 48 != chkxor(&bufr[1], end - 4 - bufr) >> 4)
+			if (*(end - 2) - 48 != chkxor(&bufr[1], end - 4 - bufr) >> 4) {
+				sum = 0;
+				memset(bufr, 0x00, 256);
 				continue;
+			}
 		} else if (*(end - 2) >= 'A' && *(end - 2) <= 'F') {
-			if (*(end - 2) - 55 != chkxor(&bufr[1], end - 4 - bufr) >> 4)
+			if (*(end - 2) - 55 != chkxor(&bufr[1], end - 4 - bufr) >> 4) {
+				sum = 0;
+				memset(bufr, 0x00, 256);
 				continue;
+			}
 		} else {
 			sum = 0;
 			memset(bufr, 0x00, 256);
 			continue;
 		}
 		if (*(end - 1) >= '0' && *(end - 1) <= '9') {
-			if (*(end - 1) - 48 != (chkxor(&bufr[1], end - 4 - bufr) & 0x0F))
+			if (*(end - 1) - 48 != (chkxor(&bufr[1], end - 4 - bufr) & 0x0F)) {
+				sum = 0;
+				memset(bufr, 0x00, 256);
 				continue;
+			}
 		} else if (*(end - 1) >= 'A' && *(end - 1) <= 'F') {
-			if (*(end - 1) - 55 != (chkxor(&bufr[1], end - 4 - bufr) & 0x0F))
+			if (*(end - 1) - 55 != (chkxor(&bufr[1], end - 4 - bufr) & 0x0F)) {
+				sum = 0;
+				memset(bufr, 0x00, 256);
 				continue;
+			}
 		} else {
 			sum = 0;
 			memset(bufr, 0x00, 256);
@@ -246,7 +258,7 @@ void gpsr(void)
 		int nega = 1;
 		int deci = 0;
 		double tmp = 0;
-		memset(buft, 0x00, sizeof(fcsd.r.gps));
+		memset(buft, 0x00, sizeof(buft));
 		for (p = bufr + 6; p < end - 3; p++) {
 			if (*p == ',' && *(p + 1) >= '0' && *(p + 1) <= '9') {
 				i++;
@@ -273,6 +285,12 @@ void gpsr(void)
 				deci--;
 			}
 		}
+#if 0
+		unsigned temp;
+		for (temp = 0; temp < 14; temp++)
+			printf("%5.3f,", buft[temp]);
+		printf("\n");
+#endif
 		int lockkey = intLock();
 		counter = 0;
 		msgQSend(mqfcs2, &buft[i], sizeof(fcsd.r.gps), NO_WAIT, MSG_PRI_NORMAL);
@@ -289,7 +307,7 @@ void acsr(void)
 	FOREVER {
 		unsigned len = 0;
 		static unsigned sum;
-		len = read(com1, bufr + sum, 256);
+		len = read(com1, bufr + sum, 256 - sum);
 		if (sum == 0 && bufr[0] != 0xA5)
 			continue;
 		sum += len;
