@@ -84,6 +84,7 @@ void fl19(void)
 	\--------------*/
 	tcanr = taskSpawn("canr", 100, VX_FP_TASK, 10000, (FUNCPTR)canr, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	tcant = taskSpawn("cant", 100, VX_FP_TASK, 10000, (FUNCPTR)cant, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+#if 0
 	tgpsr = taskSpawn("gpsr", 100, VX_FP_TASK, 10000, (FUNCPTR)gpsr, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	tacsr = taskSpawn("acsr", 100, VX_FP_TASK, 10000, (FUNCPTR)acsr, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	tacst = taskSpawn("acst", 100, VX_FP_TASK, 10000, (FUNCPTR)acst, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
@@ -96,8 +97,6 @@ void fl19(void)
 	/*------\
 	| Dummy	|
 	\------*/
-#if 0
-	tdcan = taskSpawn("dcan", 100, VX_FP_TASK, 10000, (FUNCPTR)dcan, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	tdgps = taskSpawn("dgps", 100, VX_FP_TASK, 10000, (FUNCPTR)dgps, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	tdacs = taskSpawn("dacs", 100, VX_FP_TASK, 10000, (FUNCPTR)dacs, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 #endif
@@ -144,8 +143,8 @@ void tmr(void)
 
 void canr(void)
 {
-	unsigned char bufr[13];
-	unsigned char buft[15];
+	static unsigned char bufr[13];
+	static unsigned char buft[15];
 	FOREVER {
 		msgQReceive(mqcanr, bufr, 13, WAIT_FOREVER);
 		memcpy(buft + 13, &counter, sizeof(counter));
@@ -159,8 +158,8 @@ void canr(void)
 void cant(void)
 {
 	const unsigned long id[7] = {0x000A6000, 0x080A2000, 0x10FA0F00, 0x180A1000, 0x200A1000, 0x280A1000, 0xA80A0800};
-	unsigned char bufr[9];
-	unsigned char buft[7][13];
+	static unsigned char bufr[9];
+	static unsigned char buft[7][13];
 	unsigned char i;
 	for (i = 0; i < 7; i++) {
 		buft[i][0] = 0x88;
@@ -286,7 +285,7 @@ void gpsr(void)
 void acsr(void)
 {
 	int com1 = open("/tjat/0", O_RDWR, 0);
-	unsigned char bufr[256];
+	static unsigned char bufr[256];
 	FOREVER {
 		unsigned len = 0;
 		static unsigned sum;
@@ -350,7 +349,7 @@ void fcs(void)
 	FOREVER {
 		eventReceive(VXEV01 | VXEV02 | VXEV03 | VXEV04 | VXEV05, EVENTS_WAIT_ANY, WAIT_FOREVER, &ev);
 		if (ev & VXEV01) {
-			unsigned char bufr[15];
+			static unsigned char bufr[15];
 			msgQReceive(mqfcs1, bufr, 15, NO_WAIT);
 			unsigned long id[13] = {0x380A9010, 0x400A9020, 0x48019030, 0x500A9040, 0x580A9050, 0x600A9060, 0x680A9070, 0x700A9080, 0x780A9090, 0x800A90A0, 0x880AC0B0, 0x900A80B0, 0x980A80B0};
 			unsigned i;
@@ -508,7 +507,7 @@ void fcs(void)
 				k = i - 6;
 			else
 				k = i;
-			unsigned char buft[9];
+			static unsigned char buft[9];
 			buft[8] = k;
 			memcpy(buft, (unsigned char *)&fcsd.t + 8 * k, 8);
 			msgQSend(mqcant, buft, 9, NO_WAIT, MSG_PRI_NORMAL);
@@ -609,88 +608,6 @@ void ets(void)
 	/* ETS Functional Module	*/
 }
 
-void dcan(void)
-{
-	FOREVER {
-		semTake(sbtmr, WAIT_FOREVER);
-		unsigned char buft[15] = {0x88};
-		unsigned long id[13] = {0x380A9010, 0x400A9020, 0x48019030, 0x500A9040, 0x580A9050, 0x600A9060, 0x680A9070, 0x700A9080, 0x780A9090, 0x800A90A0, 0x880AC0B0, 0x900A80B0, 0x980A80B0};
-		static unsigned i;
-		static unsigned j;
-		switch (counter % 4) {
-		case 0:
-			memcpy(buft + 1, &id[0], 4);
-			buft[5] = 0x28;
-			buft[6] = 0x00;
-			buft[7] = fcsd.t.ir.azi;
-			buft[8] = fcsd.t.ir.azi >> 8;
-			buft[9] = fcsd.t.ir.pit;
-			buft[10] = fcsd.t.ir.pit >> 8;
-			buft[11] = 0x00;
-			buft[12] = 0x00;
-			buft[13] = counter;
-			buft[14] = counter >> 8;
-			msgQSend(mqfcs1, buft, 15, NO_WAIT, MSG_PRI_NORMAL);
-			break;
-		case 1:
-			memcpy(buft + 1, &id[1], 4);
-			if (fcsd.t.sv.sv)
-				buft[5] = 0x10;
-			else
-				buft[5] = 0x00;
-			buft[6] = 0x00;
-			buft[7] = fcsd.t.sv.azi;
-			buft[8] = fcsd.t.sv.azi >> 8;
-			buft[9] = fcsd.t.sv.pit;
-			buft[10] = fcsd.t.sv.pit >> 8;
-			buft[11] = 0x00;
-			buft[12] = 0x00;
-			buft[13] = counter;
-			buft[14] = counter >> 8;
-			msgQSend(mqfcs1, buft, 15, NO_WAIT, MSG_PRI_NORMAL);
-			break;
-		case 2:
-			if (i > 7)
-				i = 0;
-			memcpy(buft + 1, &id[2 + i], 4);
-			i++;
-			break;
-		case 3:
-			if (j > 3)
-				j = 0;
-			if (j < 3)
-				memcpy(buft + 1, &id[10 + j], 4);
-			switch (j) {
-			case 0:
-				buft[5] = 0xEB;
-				buft[6] = 0x00;
-				buft[7] = 0x00;
-				buft[8] = 0x00;
-				buft[9] = 0x00;
-				buft[10] = 0x10;
-				buft[11] = 0x00;
-				buft[12] = 0x00;
-				break;
-			case 1:
-				memset(buft + 5, 0x00, 8);
-				break;
-			case 2:
-				memset(buft + 5, 0x00, 8);
-				break;
-			default:
-				break;
-			}
-			buft[13] = counter;
-			buft[14] = counter >> 8;
-			j++;
-			msgQSend(mqfcs1, buft, 15, NO_WAIT, MSG_PRI_NORMAL);
-			break;
-		default:
-			break;
-		}
-	}
-}
-
 void dgps(void)
 {
 	double buft[14] = {1800,95133.800,135,-57.00,196.49,45.83072500,122.61647500,240,-0.279,-0.944,-1.186,9.577,4,6};
@@ -739,7 +656,7 @@ void dacs(void)
  */
 void cani(void)
 {
-	unsigned char buf[13];
+	static unsigned char buf[13];
 	if (!(INTERRUPT() & 0x01))
 		return;
 	if (!HK_RD_IR(1)) {

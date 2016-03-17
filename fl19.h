@@ -10,7 +10,6 @@ void acst(void);
 void fcs(void);
 void mls(void);
 void ets(void);
-void dcan(void);
 void dgps(void);
 void dacs(void);
 void cani(void);
