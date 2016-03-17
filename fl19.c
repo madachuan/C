@@ -253,7 +253,6 @@ void gpsr(void)
 			memset(bufr, 0x00, 256);
 			continue;
 		}
-		printf("%s", bufr);
 		char *p = NULL;
 		signed char i = -1;
 		signed char nega = 1;
@@ -279,18 +278,12 @@ void gpsr(void)
 			}
 			if (deci == 0) {
 				buft[i] *= 10;
-				buft[i] += *p;
+				buft[i] += *p - 48;
 			} else if (deci == -1) {
-				buft[i] += *p * pow(10, deci);
+				buft[i] += (*p - 48) * pow(10, deci);
 				deci--;
 			}
 		}
-#if 0
-		unsigned temp;
-		for (temp = 0; temp < 14; temp++)
-			printf("%5.3f,", buft[temp]);
-		printf("\n");
-#endif
 		int lockkey = intLock();
 		counter = 0;
 		msgQSend(mqfcs2, &buft[i], sizeof(fcsd.r.gps), NO_WAIT, MSG_PRI_NORMAL);
