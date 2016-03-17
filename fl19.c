@@ -198,10 +198,11 @@ void gpsr(void)
 {
 	static char bufr[256];
 	static double buft[14];
+	int com4 = open("/tjat/3", O_RDWR, 0);
 	FOREVER {
-		unsigned len = 0;
-		static unsigned sum;
-		len = read(open("/tjat/3", O_RDWR, 0), bufr + sum, 256 - sum);
+		unsigned short len = 0;
+		static unsigned short sum;
+		len = read(com4, bufr + sum, 256 - sum);
 		if (sum == 0 && strstr(bufr, "$GPHPD,") != bufr)
 			continue;
 		sum += len;
@@ -252,11 +253,11 @@ void gpsr(void)
 			memset(bufr, 0x00, 256);
 			continue;
 		}
+		printf("%s", bufr);
 		char *p = NULL;
-		int i = -1;
-		int nega = 1;
-		int deci = 0;
-		double tmp = 0;
+		signed char i = -1;
+		signed char nega = 1;
+		signed char deci = 0;
 		memset(buft, 0x00, sizeof(buft));
 		for (p = bufr + 6; p < end - 3; p++) {
 			if (*p == ',' && *(p + 1) >= '0' && *(p + 1) <= '9') {
@@ -276,9 +277,9 @@ void gpsr(void)
 				deci = -1;
 				continue;
 			}
-			if (deci == 1) {
-				buft[i] += tmp;
-				tmp *= 10;
+			if (deci == 0) {
+				buft[i] *= 10;
+				buft[i] += *p;
 			} else if (deci == -1) {
 				buft[i] += *p * pow(10, deci);
 				deci--;
