@@ -21,8 +21,8 @@
 #include <intLib.h>
 #include <iv.h>
 
-#include "fl19.h"
 #include "fl19protocol.h"
+#include "fl19.h"
 #include "chk.h"
 #include "bit.h"
 
@@ -612,17 +612,18 @@ void fcs(void)
 void mls(void)
 {
 	static MLSD mlsd;
-	unsigned char umask = 0x00;
+	unsigned char force = 0x00;
 	FOREVER {
 		msgQReceive(mqmls, &mlsd.t, sizeof(mlsd.t), WAIT_FOREVER);
+		unsigned char umask = 0x00;
 		unsigned char i;
 		for (i = 0; i < 8; i++)
 			if (mlsd.t.m[i].exist && !(unsigned char *)(&mlsd.t.m[i]))
 				umask |= 0x01 << i;
 		for (i = 0; i < 8; i++) {
-			if (!(umask & 0x01 << i))
+			if (!(umask & 0x01 << i) || mlsd.t.m[i].regret || force & 0x01 << i)
 				continue;
-			if (!(mlsd.t.dp.mx << i)) {
+			if (!(mlsd.t.dp.mx & 0x01 << i)) {
 				mlsd.r.m[i].mod = mlsd.t.dp.mod;
 				mlsd.r.m[i].tail = mlsd.t.dp.tail;
 				mlsd.r.m[i].ajc = mlsd.t.dp.ajc;
@@ -632,9 +633,35 @@ void mls(void)
 				mlsd.r.m[i].cage = 0;
 				mlsd.r.m[i].safe = 0;
 				mlsd.r.m[i].launch = 0;
-			} else {
 			}
 		}
+		unsigned char cut = 0x00;
+		for (i = 0; i < 8; i++)
+			if (mlsd.t.m[i].cut)
+				cut |= 0x01 << i;
+		if (bitsum1(cut) > 2)
+			continue;
+		if ((mlsd.t.dp.mx | cut) == cut) {
+			mlsp(cut, &mlsd, &force);
+		} else {
+			if (bitsum1(cut) == 2) {
+				mlsp(cut, &mlsd, &force);
+			} else {
+				if (bitsum1(mlsd.t.dp.mx | cut) <= 2) {
+					mlsp(mlsd.t.dp.mx, &mlsd, &force);
+				} else {
+					unsigned char tmp = mlsd.t.dp.mx;
+					unsigned char j = 0xFF;
+					do {
+						j >>= 1;
+						tmp &= j;
+						tmp |= mlsd.t.dp.mx & cut;
+					} while (bitsum1(tmp | cut) > 2);
+					mlsp(tmp | cut, &mlsd, &force);
+				}
+			}
+		}
+		msgQSend(mqfcs5, &mlsd.r, sizeof(mlsd.r), NO_WAIT, MSG_PRI_NORMAL);
 	}
 }
 
@@ -710,6 +737,10 @@ void tmri(void)
 	if (counter > 29999)
 		counter = 0;
 	semFlush(sbtmr);
+}
+
+void mlsp(unsigned char avail, MLSD *mlsd, unsigned char *force)
+{
 }
 /*			|
  *  THIRD LEVEL END	|
