@@ -24,6 +24,7 @@
 #include "fl19.h"
 #include "fl19protocol.h"
 #include "chk.h"
+#include "bit.h"
 
 SEM_ID sbtmr;
 MSG_Q_ID mqcanr;
@@ -188,6 +189,7 @@ void cant(void)
 			ctr++;
 			HK_CAN_WRITE(1, buft[2]);
 			/*////////////////////////////relay*/
+			/*////////////////////////////chk*/
 			break;
 		case 3:
 			if (i > 3)
@@ -469,14 +471,7 @@ void fcs(void)
 				etsd.t.dp.guide = fcsd.r.dp.guide;
 				etsd.t.dp.pos = fcsd.r.dp.pos;
 				fcsd.t.acs.num = fcsd.r.dp.num + 1;
-				mlsd.t.dp.m8 = fcsd.r.dp.m8;
-				mlsd.t.dp.m7 = fcsd.r.dp.m7;
-				mlsd.t.dp.m6 = fcsd.r.dp.m6;
-				mlsd.t.dp.m5 = fcsd.r.dp.m5;
-				mlsd.t.dp.m4 = fcsd.r.dp.m4;
-				mlsd.t.dp.m3 = fcsd.r.dp.m3;
-				mlsd.t.dp.m2 = fcsd.r.dp.m2;
-				mlsd.t.dp.m1 = fcsd.r.dp.m1;
+				mlsd.t.dp.mx = bitrev(fcsd.r.dp.mx);
 				mlsd.t.dp.launch = fcsd.r.dp.launch;
 				mlsd.t.dp.safe = fcsd.r.dp.safe;
 				mlsd.t.dp.cage = fcsd.r.dp.cage;
@@ -616,8 +611,30 @@ void fcs(void)
 
 void mls(void)
 {
+	static MLSD mlsd;
+	unsigned char umask = 0x00;
 	FOREVER {
 		msgQReceive(mqmls, &mlsd.t, sizeof(mlsd.t), WAIT_FOREVER);
+		unsigned char i;
+		for (i = 0; i < 8; i++)
+			if (mlsd.t.m[i].exist && !(unsigned char *)(&mlsd.t.m[i]))
+				umask |= 0x01 << i;
+		for (i = 0; i < 8; i++) {
+			if (!(umask & 0x01 << i))
+				continue;
+			if (!(mlsd.t.dp.mx << i)) {
+				mlsd.r.m[i].mod = mlsd.t.dp.mod;
+				mlsd.r.m[i].tail = mlsd.t.dp.tail;
+				mlsd.r.m[i].ajc = mlsd.t.dp.ajc;
+				mlsd.r.m[i].rst = mlsd.t.dp.rst;
+				mlsd.r.m[i].chk = mlsd.t.dp.chk;
+				mlsd.r.m[i].up = 0;
+				mlsd.r.m[i].cage = 0;
+				mlsd.r.m[i].safe = 0;
+				mlsd.r.m[i].launch = 0;
+			} else {
+			}
+		}
 	}
 }
 

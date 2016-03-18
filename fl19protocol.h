@@ -64,14 +64,7 @@ typedef struct {
 			unsigned char guide:1;
 			unsigned char pos:1;
 			unsigned char num:3;
-			unsigned char m8:1;
-			unsigned char m7:1;
-			unsigned char m6:1;
-			unsigned char m5:1;
-			unsigned char m4:1;
-			unsigned char m3:1;
-			unsigned char m2:1;
-			unsigned char m1:1;
+			unsigned char mx;
 			unsigned char launch:1;
 			unsigned char safe:1;
 			unsigned char cage:1;
@@ -382,14 +375,7 @@ typedef struct {
 			unsigned char gas;
 		} m[8];
 		struct {
-			unsigned char m1:1;
-			unsigned char m2:1;
-			unsigned char m3:1;
-			unsigned char m4:1;
-			unsigned char m5:1;
-			unsigned char m6:1;
-			unsigned char m7:1;
-			unsigned char m8:1;
+			unsigned char mx;
 			unsigned char mod:1;
 			unsigned char tail:1;
 			unsigned char ajc:1;
