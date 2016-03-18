@@ -172,6 +172,7 @@ void cant(void)
 		semTake(sbtmr, WAIT_FOREVER);
 		while (ERROR != msgQReceive(mqcant, bufr, 9, NO_WAIT))
 			memcpy(buft[bufr[8]] + 5, bufr, 8);
+		static unsigned char ctr;
 		static unsigned char i;
 		switch (tick % 4) {
 		case 0:
@@ -181,8 +182,11 @@ void cant(void)
 			HK_CAN_WRITE(1, buft[1]);
 			break;
 		case 2:
+			if (ctr > 7)
+				ctr = 0;
+			buft[2][12] = ctr;
+			ctr++;
 			HK_CAN_WRITE(1, buft[2]);
-			/*////////////////////////////ctr*/
 			/*////////////////////////////relay*/
 			break;
 		case 3:
@@ -289,7 +293,7 @@ void gpsr(void)
 		}
 		int lockkey = intLock();
 		counter = 0;
-		msgQSend(mqfcs2, &buft[i], sizeof(fcsd.r.gps), NO_WAIT, MSG_PRI_NORMAL);
+		msgQSend(mqfcs2, buft, sizeof(fcsd.r.gps), NO_WAIT, MSG_PRI_NORMAL);
 		intUnlock(lockkey);
 		sum = 0;
 		memset(bufr, 0x00, 256);
@@ -330,7 +334,7 @@ void acsr(void)
 				continue;
 			if (bufr[i + sizeof(fcsd.r.acs) - 1] != chkxor(&bufr[i + 1], sizeof(fcsd.r.acs) - 2))
 				continue;
-			msgQSend(mqfcs3, &bufr[i], sizeof(fcsd.r.acs), NO_WAIT, MSG_PRI_NORMAL);
+			msgQSend(mqfcs3, bufr, sizeof(fcsd.r.acs), NO_WAIT, MSG_PRI_NORMAL);
 			break;
 		}
 		sum = 0;
@@ -365,8 +369,8 @@ void fcs(void)
 		if (ev & VXEV01) {
 			static unsigned char bufr[15];
 			msgQReceive(mqfcs1, bufr, 15, NO_WAIT);
-			unsigned long id[13] = {0x380A9010, 0x400A9020, 0x48019030, 0x500A9040, 0x580A9050, 0x600A9060, 0x680A9070, 0x700A9080, 0x780A9090, 0x800A90A0, 0x880AC0B0, 0x900A80B0, 0x980A80B0};
-			unsigned i;
+			unsigned long id[13] = {0x380A9010, 0x400A9020, 0x480A9030, 0x500A9040, 0x580A9050, 0x600A9060, 0x680A9070, 0x700A9080, 0x780A9090, 0x800A90A0, 0x880AC0B0, 0x900A80B0, 0x980A80B0};
+			unsigned char i;
 			for (i = 0; i < 13; i++)
 				if (*(unsigned long *)(bufr + 1) == id[i])
 					break;

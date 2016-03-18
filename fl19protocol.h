@@ -230,8 +230,8 @@ typedef struct {
 typedef struct {
 	struct {
 		struct {
-			signed char stp:1;
-			signed char fbd:1;
+			unsigned char stp:1;
+			unsigned char fbd:1;
 			unsigned char ir:1;
 			unsigned char get:1;
 			unsigned char laser:1;
@@ -241,8 +241,8 @@ typedef struct {
 			short pit;
 		} __attribute__((packed)) ir;
 		struct {
-			signed char stp:1;
-			signed char fbd:1;
+			unsigned char stp:1;
+			unsigned char fbd:1;
 			unsigned char sv1:1;
 			unsigned char sv2:1;
 			unsigned char ahead:1;
