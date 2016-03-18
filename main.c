@@ -21,5 +21,5 @@ int main(int argc, char **argv)
 	dmchk();
 	dmbit();
 	dmsort();
-	return (0);
+	return 0;
 }

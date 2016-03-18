@@ -107,7 +107,7 @@ unsigned part(unsigned char *buf, unsigned n)
 		i++;
 	}
 	exchange(&buf[j], &buf[n - 1]);
-	return (j);
+	return j;
 }
 
 void exchange(unsigned char *x, unsigned char *y)

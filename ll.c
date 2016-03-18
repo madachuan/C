@@ -107,7 +107,7 @@ struct ll *llcreate(void)
 		exit(ENOMEM);
 	head->key = 0;
 	head->next = NULL;
-	return (head);
+	return head;
 }
 
 struct ll *lltail(struct ll *p)
@@ -115,8 +115,8 @@ struct ll *lltail(struct ll *p)
 	if (!p)
 		exit(EFAULT);
 	if (!p->next)
-		return (p);
-	return (lltail(p->next));
+		return p;
+	return lltail(p->next);
 }
 
 struct ll *llmax(struct ll *p)
@@ -124,11 +124,11 @@ struct ll *llmax(struct ll *p)
 	if (!p)
 		exit(EFAULT);
 	if (!p->next)
-		return (NULL);
+		return NULL;
 	if (!p->next->next)
-		return (p->next);
+		return p->next;
 	struct ll *tmp = llmax(p->next);
-	return (p->next->key > tmp->key ? p->next : tmp);
+	return p->next->key > tmp->key ? p->next : tmp;
 }
 
 struct ll *llmin(struct ll *p)
@@ -136,11 +136,11 @@ struct ll *llmin(struct ll *p)
 	if (!p)
 		exit(EFAULT);
 	if (!p->next)
-		return (NULL);
+		return NULL;
 	if (!p->next->next)
-		return (p->next);
+		return p->next;
 	struct ll *tmp = llmin(p->next);
-	return (p->next->key < tmp->key ? p->next : tmp);
+	return p->next->key < tmp->key ? p->next : tmp;
 }
 
 struct ll *llfind(struct ll *p, unsigned char key)
@@ -148,10 +148,10 @@ struct ll *llfind(struct ll *p, unsigned char key)
 	if (!p)
 		exit(EFAULT);
 	if (!p->next)
-		return (NULL);
+		return NULL;
 	if (p->next->key == key)
-		return (p->next);
-	return (llfind(p->next, key));
+		return p->next;
+	return llfind(p->next, key);
 }
 
 struct ll *llget(struct ll *p, unsigned char key)
@@ -159,13 +159,13 @@ struct ll *llget(struct ll *p, unsigned char key)
 	if (!p)
 		exit(EFAULT);
 	if (!p->next)
-		return (NULL);
+		return NULL;
 	if (p->next->key == key) {
 		struct ll *ret = p->next;
 		p->next = p->next->next;
-		return (ret);
+		return ret;
 	}
-	return (llget(p->next, key));
+	return llget(p->next, key);
 }
 
 struct ll *llstrip(struct ll *p, struct ll *node)
@@ -173,12 +173,12 @@ struct ll *llstrip(struct ll *p, struct ll *node)
 	if (!p || !node)
 		exit(EFAULT);
 	if (!p->next)
-		return (NULL);
+		return NULL;
 	if (p->next == node) {
 		p->next = p->next->next;
-		return (node);
+		return node;
 	}
-	return (llstrip(p->next, node));
+	return llstrip(p->next, node);
 }
 
 struct ll *llbehead(struct ll *head)
@@ -188,7 +188,7 @@ struct ll *llbehead(struct ll *head)
 	struct ll *ret = head->next;
 	ret->key = 0;
 	free(head);
-	return (ret);
+	return ret;
 }
 
 unsigned lllen(struct ll *p)
@@ -196,8 +196,8 @@ unsigned lllen(struct ll *p)
 	if (!p)
 		exit(EFAULT);
 	if (!p->next)
-		return (0);
-	return (1 + lllen(p->next));
+		return 0;
+	return 1 + lllen(p->next);
 }
 
 unsigned llscan(struct ll *p, unsigned char key)
@@ -205,10 +205,10 @@ unsigned llscan(struct ll *p, unsigned char key)
 	if (!p)
 		exit(EFAULT);
 	if (!p->next)
-		return (0);
+		return 0;
 	if (p->next->key == key)
-		return (1 + llscan(p->next, key));
-	return (llscan(p->next, key));
+		return 1 + llscan(p->next, key);
+	return llscan(p->next, key);
 }
 
 unsigned lldelscan(struct ll *p, unsigned char key)
@@ -216,16 +216,16 @@ unsigned lldelscan(struct ll *p, unsigned char key)
 	if (!p)
 		exit(EFAULT);
 	if (!p->next)
-		return (0);
+		return 0;
 	if (p->next->key == key) {
 		struct ll *tmp = p->next;
 		p->next = p->next->next;
 		free(tmp);
 		if (!p->next)
-			return (1);
-		return (1 + lldelscan(p->next, key));
+			return 1;
+		return 1 + lldelscan(p->next, key);
 	}
-	return (lldelscan(p->next, key));
+	return lldelscan(p->next, key);
 }
 
 unsigned llrep(struct ll *p, unsigned char key, unsigned char new)
@@ -233,12 +233,12 @@ unsigned llrep(struct ll *p, unsigned char key, unsigned char new)
 	if (!p)
 		exit(EFAULT);
 	if (!p->next)
-		return (0);
+		return 0;
 	if (p->next->key == key) {
 		p->next->key = new;
-		return (1 + llrep(p->next, key, new));
+		return 1 + llrep(p->next, key, new);
 	}
-	return (llrep(p->next, key, new));
+	return llrep(p->next, key, new);
 }
 
 void llins(struct ll *p, unsigned char key)

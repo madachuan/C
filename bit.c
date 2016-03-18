@@ -27,7 +27,7 @@ unsigned bitsum0(unsigned char byte)
 	for (i = 0, ret = 0; i < 8; i++)
 		if (!(byte & 0x01 << i))
 			ret++;
-	return (ret);
+	return ret;
 }
 
 unsigned bitsum1(unsigned char byte)
@@ -37,7 +37,7 @@ unsigned bitsum1(unsigned char byte)
 	for (i = 0, ret = 0; i < 8; i++)
 		if (byte & 0x01 << i)
 			ret++;
-	return (ret);
+	return ret;
 }
 
 unsigned char bitrev(unsigned char byte)
@@ -49,5 +49,5 @@ unsigned char bitrev(unsigned char byte)
 			ret |= (byte & 0x01 << i) << (7 - i * 2);
 		else
 			ret |= (byte & 0x01 << i) >> (i * 2 - 7);
-	return (ret);
+	return ret;
 }

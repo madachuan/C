@@ -39,7 +39,7 @@ struct cll *cllcreate(void)
 		exit(ENOMEM);
 	head->key = 0;
 	head->next = NULL;
-	return (head);
+	return head;
 }
 
 struct cll *clltail(struct cll *head, struct cll *p)
@@ -47,12 +47,12 @@ struct cll *clltail(struct cll *head, struct cll *p)
 	if (!head)
 		exit(EFAULT);
 	if (!p)
-		return (head);
+		return head;
 	if (!p->next)
-		return (p);
+		return p;
 	if (p->next == head->next)
-		return (p);
-	return (clltail(head, p->next));
+		return p;
+	return clltail(head, p->next);
 }
 
 struct cll *cllmax(struct cll *head, struct cll *p)
@@ -60,13 +60,13 @@ struct cll *cllmax(struct cll *head, struct cll *p)
 	if (!head)
 		exit(EFAULT);
 	if (!p)
-		return (NULL);
+		return NULL;
 	if (!p->next)
-		return (p);
+		return p;
 	if (p->next == head->next)
-		return (p);
+		return p;
 	struct cll *tmp = cllmax(head, p->next);
-	return (p->key > tmp->key ? p : tmp);
+	return p->key > tmp->key ? p : tmp;
 }
 
 struct cll *cllmin(struct cll *head, struct cll *p)
@@ -74,13 +74,13 @@ struct cll *cllmin(struct cll *head, struct cll *p)
 	if (!head)
 		exit(EFAULT);
 	if (!p)
-		return (NULL);
+		return NULL;
 	if (!p->next)
-		return (p);
+		return p;
 	if (p->next == head->next)
-		return (p);
+		return p;
 	struct cll *tmp = cllmin(head, p->next);
-	return (p->key < tmp->key ? p : tmp);
+	return p->key < tmp->key ? p : tmp;
 }
 
 unsigned clllen(struct cll *head, struct cll *p)
@@ -88,12 +88,12 @@ unsigned clllen(struct cll *head, struct cll *p)
 	if (!head)
 		exit(EFAULT);
 	if (!p)
-		return (0);
+		return 0;
 	if (!p->next)
-		return (1);
+		return 1;
 	if (p->next == head->next)
-		return (1);
-	return (1 + clllen(head, p->next));
+		return 1;
+	return 1 + clllen(head, p->next);
 }
 
 void cllinstail(struct cll *head, struct cll *p, unsigned char key)
