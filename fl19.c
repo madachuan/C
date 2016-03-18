@@ -48,6 +48,7 @@ int tdcan;
 int tdgps;
 int tdacs;
 unsigned short counter;
+unsigned char tick;
 FCSD fcsd;
 MLSD mlsd;
 ETSD etsd;
@@ -88,7 +89,9 @@ void fl19(void)
 #if 0
 	tacsr = taskSpawn("acsr", 100, VX_FP_TASK, 10000, (FUNCPTR)acsr, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	tacst = taskSpawn("acst", 100, VX_FP_TASK, 10000, (FUNCPTR)acst, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+#endif
 	tfcs = taskSpawn("fcs", 100, VX_FP_TASK, 10000, (FUNCPTR)fcs, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+#if 0
 	/*--------------\
 	| Modules	|
 	\--------------*/
@@ -147,7 +150,7 @@ void canr(void)
 	static unsigned char buft[15];
 	FOREVER {
 		msgQReceive(mqcanr, bufr, 13, WAIT_FOREVER);
-		memcpy(buft + 13, &counter, sizeof(counter));
+		memcpy(buft + 13, &counter, 2);
 		if (bufr[0] == 0x88) {
 			memcpy(buft, bufr, 13);
 			msgQSend(mqfcs1, buft, 15, NO_WAIT, MSG_PRI_NORMAL);
@@ -163,14 +166,14 @@ void cant(void)
 	unsigned char i;
 	for (i = 0; i < 7; i++) {
 		buft[i][0] = 0x88;
-		memcpy(buft[i] + 1, &id[i], sizeof(id[i]));
+		memcpy(buft[i] + 1, &id[i], 4);
 	}
 	FOREVER {
 		semTake(sbtmr, WAIT_FOREVER);
 		while (ERROR != msgQReceive(mqcant, bufr, 9, NO_WAIT))
 			memcpy(buft[bufr[8]] + 5, bufr, 8);
 		static unsigned char i;
-		switch (counter % 4) {
+		switch (tick % 4) {
 		case 0:
 			HK_CAN_WRITE(1, buft[0]);
 			break;
@@ -257,7 +260,7 @@ void gpsr(void)
 		signed char i = -1;
 		signed char nega = 1;
 		signed char deci = 0;
-		memset(buft, 0x00, sizeof(buft));
+		memset(buft, 0x00, 14);
 		for (p = bufr + 6; p < end - 3; p++) {
 			if (*p == ',' && *(p + 1) >= '0' && *(p + 1) <= '9') {
 				i++;
@@ -625,7 +628,7 @@ void dgps(void)
 	FOREVER {
 		buft[1]++;
 		counter = 0;
-		msgQSend(mqfcs2, buft, sizeof(buft), NO_WAIT, MSG_PRI_NORMAL);
+		msgQSend(mqfcs2, buft, 14, NO_WAIT, MSG_PRI_NORMAL);
 		taskDelay(60);
 	}
 }
@@ -652,7 +655,7 @@ void dacs(void)
 		buft[18] = ((unsigned long)(fcsd.r.gps.time * 1000) % 30000) >> 8;
 		buft[19] = chkxor(buft + 4, 15);
 		buft[21] = chkxor(buft + 1, 19);
-		msgQSend(mqfcs3, buft + 3, sizeof(buft) - 7, NO_WAIT, MSG_PRI_NORMAL);
+		msgQSend(mqfcs3, buft + 3, 17, NO_WAIT, MSG_PRI_NORMAL);
 		taskDelay(60);
 	}
 }
@@ -682,6 +685,7 @@ void cani(void)
 void tmri(void)
 {
 	counter++;
+	tick++;
 	if (counter > 29999)
 		counter = 0;
 	semFlush(sbtmr);
