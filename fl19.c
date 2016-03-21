@@ -612,25 +612,33 @@ void fcs(void)
 void mls(void)
 {
 	static MLSD mlsd;
-	unsigned char force = 0x00;
 	FOREVER {
 		msgQReceive(mqmls, &mlsd.t, sizeof(mlsd.t), WAIT_FOREVER);
 		unsigned char umask = 0x00;
 		unsigned char i;
 		for (i = 0; i < 8; i++)
-			if (mlsd.t.m[i].exist && !(unsigned char *)(&mlsd.t.m[i]))
+			if (mlsd.t.m[i].exist && !(unsigned char *)&mlsd.t.m[i].err)
 				umask |= 0x01 << i;
 		for (i = 0; i < 8; i++) {
-			if (!(umask & 0x01 << i) || mlsd.t.m[i].regret || force & 0x01 << i)
+			if (mlsd.t.m[i].regret)
 				continue;
-			if (!(mlsd.t.dp.mx & 0x01 << i)) {
+			if (!(umask & 0x01 << i)) {
 				mlsd.r.m[i].mod = mlsd.t.dp.mod;
 				mlsd.r.m[i].tail = mlsd.t.dp.tail;
 				mlsd.r.m[i].ajc = mlsd.t.dp.ajc;
-				mlsd.r.m[i].rst = mlsd.t.dp.rst;
-				mlsd.r.m[i].chk = mlsd.t.dp.chk;
+				if (mlsd.t.m[i].err.dumb)
+					mlsd.r.m[i].rst = 0;
+				else
+					mlsd.r.m[i].rst = mlsd.t.dp.rst;
+				if ((unsigned char *)&mlsd.t.m[i].err)
+					mlsd.r.m[i].chk = 0;
+				else
+					mlsd.r.m[i].chk = mlsd.t.dp.chk;
 				mlsd.r.m[i].up = 0;
-				mlsd.r.m[i].cage = 0;
+				if ((unsigned char *)&mlsd.t.m[i].err == 0x20)
+					mlsd.r.m[i].cage = mlsd.t.dp.cage;
+				else
+					mlsd.r.m[i].cage = 1;
 				mlsd.r.m[i].safe = 0;
 				mlsd.r.m[i].launch = 0;
 			}
@@ -642,22 +650,21 @@ void mls(void)
 		if (bitsum1(cut) > 2)
 			continue;
 		if ((mlsd.t.dp.mx | cut) == cut) {
-			mlsp(cut, &mlsd, &force);
+			mlsp(cut & umask, &mlsd);
 		} else {
 			if (bitsum1(cut) == 2) {
-				mlsp(cut, &mlsd, &force);
+				mlsp(cut & umask, &mlsd);
 			} else {
 				if (bitsum1(mlsd.t.dp.mx | cut) <= 2) {
-					mlsp(mlsd.t.dp.mx, &mlsd, &force);
+					mlsp(mlsd.t.dp.mx & umask, &mlsd);
 				} else {
 					unsigned char tmp = mlsd.t.dp.mx;
 					unsigned char j = 0xFF;
 					do {
 						j >>= 1;
 						tmp &= j;
-						tmp |= mlsd.t.dp.mx & cut;
 					} while (bitsum1(tmp | cut) > 2);
-					mlsp(tmp | cut, &mlsd, &force);
+					mlsp((tmp | cut) & umask, &mlsd);
 				}
 			}
 		}
@@ -739,8 +746,103 @@ void tmri(void)
 	semFlush(sbtmr);
 }
 
-void mlsp(unsigned char avail, MLSD *mlsd, unsigned char *force)
+void mlsp(unsigned char avail, MLSD *mlsd)
 {
+	static unsigned char force;
+	unsigned char i;
+	if (!mlsd->t.dp.chk && mlsd->t.dp.cage && mlsd->t.dp.safe && mlsd->t.dp.launch && !mlsd->t.dp.rst) {
+		for (i = 0; i < 8; i++)
+			if (mlsd->t.dp.mx & avail & 0x01 << i && mlsd->t.m[i].cut && !mlsd->t.m[i].pin0 && mlsd->t.m[i].pin1 && mlsd->t.m[i].ready && mlsd->t.m[i].safe) {
+				mlsd->r.m[i].mod = mlsd->t.dp.mod;
+				mlsd->r.m[i].tail = mlsd->t.dp.tail;
+				mlsd->r.m[i].ajc = mlsd->t.dp.ajc;
+				mlsd->r.m[i].rst = 0;
+				mlsd->r.m[i].chk = 0;
+				mlsd->r.m[i].up = 1;
+				mlsd->r.m[i].cage = 1;
+				mlsd->r.m[i].safe = 1;
+				mlsd->r.m[i].launch = 1;
+				break;
+			}
+		for (i++; i < 8; i++)
+			if (mlsd->t.dp.mx & avail & 0x01 << i && mlsd->t.m[i].cut && !mlsd->t.m[i].pin0 && mlsd->t.m[i].pin1 && mlsd->t.m[i].ready && mlsd->t.m[i].safe) {
+				mlsd->r.m[i].mod = mlsd->t.dp.mod;
+				mlsd->r.m[i].tail = mlsd->t.dp.tail;
+				mlsd->r.m[i].ajc = mlsd->t.dp.ajc;
+				mlsd->r.m[i].rst = 0;
+				mlsd->r.m[i].chk = 0;
+				mlsd->r.m[i].up = 1;
+				mlsd->r.m[i].cage = 0;
+				mlsd->r.m[i].safe = 0;
+				mlsd->r.m[i].launch = 0;
+				force |= 0x01 << i;
+			}
+	} else {
+		if (!mlsd->t.dp.cage) {
+			for (i = 0; i < 8; i++)
+				if (mlsd->t.dp.mx & avail & 0x01 << i && (!mlsd->t.m[i].pin0 || mlsd->t.m[i].pin1 || mlsd->t.m[i].ready || mlsd->t.m[i].safe || mlsd->t.m[i].regret))
+					break;
+			if (i == 8)
+				force = 0x00;
+		}
+		for (i = 0; i < 8; i++) {
+			if (mlsd->t.m[i].regret)
+				continue;
+			if (!(mlsd->t.dp.mx & 0x01 << i) && !mlsd->t.m[i].ready && !mlsd->t.m[i].safe) {
+				mlsd->r.m[i].mod = mlsd->t.dp.mod;
+				mlsd->r.m[i].tail = mlsd->t.dp.tail;
+				mlsd->r.m[i].ajc = mlsd->t.dp.ajc;
+				if (!mlsd->t.m[i].cut && mlsd->t.m[i].pin0 && !mlsd->t.m[i].pin1)
+					mlsd->r.m[i].rst = mlsd->t.dp.rst;
+				else
+					mlsd->r.m[i].rst = 0;
+				if (!mlsd->t.m[i].cut)
+					mlsd->r.m[i].chk = mlsd->t.dp.chk;
+				else
+					mlsd->r.m[i].chk = 0;
+				mlsd->r.m[i].up = 0;
+				mlsd->r.m[i].cage = 0;
+				mlsd->r.m[i].safe = 0;
+				mlsd->r.m[i].launch = 0;
+				continue;
+			}
+			if (mlsd->t.dp.mx & 0x01 << i && !mlsd->t.m[i].safe) {
+				mlsd->r.m[i].mod = mlsd->t.dp.mod;
+				mlsd->r.m[i].tail = mlsd->t.dp.tail;
+				mlsd->r.m[i].ajc = mlsd->t.dp.ajc;
+				mlsd->r.m[i].rst = 0;
+				mlsd->r.m[i].chk = 0;
+				mlsd->r.m[i].up = 1;
+				mlsd->r.m[i].cage = 0;
+				mlsd->r.m[i].safe = 0;
+				mlsd->r.m[i].launch = 0;
+				continue;
+			}
+			if (mlsd->t.dp.mx & 0x01 << i && mlsd->t.dp.cage && !(force & 0x01 << i)) {
+				mlsd->r.m[i].mod = mlsd->t.dp.mod;
+				mlsd->r.m[i].tail = mlsd->t.dp.tail;
+				mlsd->r.m[i].ajc = mlsd->t.dp.ajc;
+				mlsd->r.m[i].rst = 0;
+				mlsd->r.m[i].chk = 0;
+				mlsd->r.m[i].up = 1;
+				mlsd->r.m[i].cage = 1;
+				mlsd->r.m[i].safe = 0;
+				mlsd->r.m[i].launch = 0;
+				continue;
+			}
+			if (mlsd->t.dp.mx & 0x01 << i && mlsd->t.dp.cage && mlsd->t.dp.safe && !(force & 0x01 << i)) {
+				mlsd->r.m[i].mod = mlsd->t.dp.mod;
+				mlsd->r.m[i].tail = mlsd->t.dp.tail;
+				mlsd->r.m[i].ajc = mlsd->t.dp.ajc;
+				mlsd->r.m[i].rst = 0;
+				mlsd->r.m[i].chk = 0;
+				mlsd->r.m[i].up = 1;
+				mlsd->r.m[i].cage = 1;
+				mlsd->r.m[i].safe = 1;
+				mlsd->r.m[i].launch = 0;
+			}
+		}
+	}
 }
 /*			|
  *  THIRD LEVEL END	|
