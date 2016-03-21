@@ -20,20 +20,20 @@ void dmbit(void)
 	printf("%02X  ... bitrev\n", bitrev(c));
 }
 
-unsigned bitsum0(unsigned char byte)
+unsigned char bitsum0(unsigned char byte)
 {
-	unsigned ret;
-	unsigned i;
+	unsigned char ret;
+	unsigned char i;
 	for (i = 0, ret = 0; i < 8; i++)
 		if (!(byte & 0x01 << i))
 			ret++;
 	return ret;
 }
 
-unsigned bitsum1(unsigned char byte)
+unsigned char bitsum1(unsigned char byte)
 {
-	unsigned ret;
-	unsigned i;
+	unsigned char ret;
+	unsigned char i;
 	for (i = 0, ret = 0; i < 8; i++)
 		if (byte & 0x01 << i)
 			ret++;
@@ -43,7 +43,7 @@ unsigned bitsum1(unsigned char byte)
 unsigned char bitrev(unsigned char byte)
 {
 	unsigned char ret;
-	unsigned i;
+	unsigned char i;
 	for (i = 0, ret = 0; i < 8; i++)
 		if (7 - i * 2 > 0)
 			ret |= (byte & 0x01 << i) << (7 - i * 2);
