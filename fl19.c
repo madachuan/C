@@ -35,13 +35,13 @@ MSG_Q_ID mqfcs2;
 MSG_Q_ID mqfcs3;
 MSG_Q_ID mqfcs4;
 MSG_Q_ID mqfcs5;
-MSG_Q_ID mqmls;
 MSG_Q_ID mqets;
+MSG_Q_ID mqmls;
 int tcanr;
 int tcant;
 int tfcs;
-int tmls;
 int tets;
+int tmls;
 int tgpsr;
 int tacsr;
 int tacst;
@@ -51,8 +51,8 @@ int tdacs;
 unsigned short counter;
 unsigned char tick;
 FCSD fcsd;
-MLSD mlsd;
 ETSD etsd;
+MLSD mlsd;
 
 /*
  * =====================\
@@ -72,8 +72,8 @@ void fl19(void)
 	mqfcs3 = msgQCreate(1, sizeof(fcsd.r.acs), MSG_Q_FIFO);
 	mqfcs4 = msgQCreate(1, sizeof(mlsd.r), MSG_Q_FIFO);
 	mqfcs5 = msgQCreate(1, sizeof(etsd.r), MSG_Q_FIFO);
-	mqmls = msgQCreate(1, sizeof(mlsd.t), MSG_Q_FIFO);
 	mqets = msgQCreate(1, sizeof(etsd.t), MSG_Q_FIFO);
+	mqmls = msgQCreate(1, sizeof(mlsd.t), MSG_Q_FIFO);
 	/*--------------\
 	| Drivers	|
 	\--------------*/
@@ -96,8 +96,10 @@ void fl19(void)
 	/*--------------\
 	| Modules	|
 	\--------------*/
-	tmls = taskSpawn("mls", 100, VX_FP_TASK, 10000, (FUNCPTR)mls, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	tets = taskSpawn("ets", 100, VX_FP_TASK, 10000, (FUNCPTR)ets, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+#endif
+	tmls = taskSpawn("mls", 100, VX_FP_TASK, 10000, (FUNCPTR)mls, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+#if 0
 	/*------\
 	| Dummy	|
 	\------*/
@@ -680,6 +682,7 @@ void mls(void)
 				}
 			}
 		}
+		mlsd.r.umask = 0xFF;
 		msgQSend(mqfcs5, &mlsd.r, sizeof(mlsd.r), NO_WAIT, MSG_PRI_NORMAL);
 	}
 }
@@ -762,7 +765,7 @@ void mlsp(unsigned char avail, MLSD *mlsd)
 {
 	static unsigned char force;
 	unsigned char i;
-	if (!mlsd->t.dp.chk && mlsd->t.dp.cage && mlsd->t.dp.safe && mlsd->t.dp.launch && !mlsd->t.dp.rst) {
+	if (!mlsd->t.dp.chk && mlsd->t.dp.cage && mlsd->t.dp.safe && mlsd->t.dp.launch && !mlsd->t.dp.rst && !mlsd->t.ets.svstp && !mlsd->t.ets.svfbd && mlsd->t.ets.ahead) {
 		for (i = 0; i < 8; i++)
 			if (mlsd->t.dp.mx & avail & 0x01 << i && mlsd->t.m[i].cut && !mlsd->t.m[i].pin0 && mlsd->t.m[i].pin1 && mlsd->t.m[i].ready && mlsd->t.m[i].safe) {
 				mlsd->r.m[i].mod = mlsd->t.dp.mod;
