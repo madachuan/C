@@ -73,7 +73,7 @@ void fl19(void)
 	mqfcs4 = msgQCreate(1, sizeof(mlsd.r), MSG_Q_FIFO);
 	mqfcs5 = msgQCreate(1, sizeof(etsd.r), MSG_Q_FIFO);
 	mqmls = msgQCreate(1, sizeof(mlsd.t), MSG_Q_FIFO);
-	mqets = msgQCreate(3, sizeof(etsd.t), MSG_Q_FIFO);
+	mqets = msgQCreate(1, sizeof(etsd.t), MSG_Q_FIFO);
 	/*--------------\
 	| Drivers	|
 	\--------------*/
@@ -188,8 +188,6 @@ void cant(void)
 			buft[2][12] = ctr;
 			ctr++;
 			HK_CAN_WRITE(1, buft[2]);
-			/*////////////////////////////relay*/
-			/*////////////////////////////chk*/
 			break;
 		case 3:
 			if (i > 3)
@@ -379,7 +377,7 @@ void fcs(void)
 			if (i > 12)
 				continue;
 			memcpy((unsigned char *)&fcsd.r + 10 * i, bufr + 5, 10);
-			unsigned j;
+			unsigned char j;
 			switch (i) {
 			case 0:
 				etsd.t.ir.find = fcsd.r.ir.find;
@@ -581,7 +579,7 @@ void fcs(void)
 			fcsd.t.m.mod = mlsd.r.m[0].mod;
 			fcsd.t.m.tail = mlsd.r.m[0].tail;
 			fcsd.t.m.ajc = mlsd.r.m[0].ajc;
-			unsigned i;
+			unsigned char i;
 			for (i = 0; i < 8; i++) {
 				unsigned long tmp = 0;
 				if (mlsd.r.m[i].chk)
@@ -596,6 +594,10 @@ void fcs(void)
 					tmp |= 0x00000002;
 				else
 					tmp &= ~0x00000002;
+				if (mlsd.r.m[i].safe)
+					openJDQ(i + 1);
+				else
+					closeJDQ(i + 1);
 				if (mlsd.r.m[i].launch)
 					tmp |= 0x00000001;
 				else
@@ -604,6 +606,16 @@ void fcs(void)
 				fcsd.t.m.cmd &= ~(0xF0000000 >> i * 4);
 				fcsd.t.m.cmd |= (tmp << (7 - i) * 4);
 				intUnlock(lockkey);
+			}
+			for (i = 0; i < 8; i++)
+				if (mlsd.r.m[i].rst)
+					break;
+			if (i == 8) {
+				openJDQ(9);
+				openJDQ(10);
+			} else {
+				closeJDQ(9);
+				closeJDQ(10);
 			}
 		}
 	}
