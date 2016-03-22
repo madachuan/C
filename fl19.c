@@ -14,8 +14,6 @@
 #include <vxWorks.h>
 #include <semLib.h>
 #include <msgQLib.h>
-#include <msgQEvLib.h>
-#include <eventLib.h>
 #include <taskLib.h>
 #include <ioLib.h>
 #include <intLib.h>
@@ -39,7 +37,11 @@ MSG_Q_ID mqets;
 MSG_Q_ID mqmls;
 int tcanr;
 int tcant;
-int tfcs;
+int tfcs1;
+int tfcs2;
+int tfcs3;
+int tfcs4;
+int tfcs5;
 int tets;
 int tmls;
 int tgpsr;
@@ -91,7 +93,11 @@ void fl19(void)
 	tacsr = taskSpawn("acsr", 100, VX_FP_TASK, 10000, (FUNCPTR)acsr, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	tacst = taskSpawn("acst", 100, VX_FP_TASK, 10000, (FUNCPTR)acst, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 #endif
-	tfcs = taskSpawn("fcs", 100, VX_FP_TASK, 10000, (FUNCPTR)fcs, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+	tfcs1 = taskSpawn("fcs1", 100, VX_FP_TASK, 10000, (FUNCPTR)fcs1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+	tfcs2 = taskSpawn("fcs2", 100, VX_FP_TASK, 10000, (FUNCPTR)fcs2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+	tfcs3 = taskSpawn("fcs3", 100, VX_FP_TASK, 10000, (FUNCPTR)fcs3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+	tfcs4 = taskSpawn("fcs4", 100, VX_FP_TASK, 10000, (FUNCPTR)fcs4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+	tfcs5 = taskSpawn("fcs5", 100, VX_FP_TASK, 10000, (FUNCPTR)fcs5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 #if 0
 	/*--------------\
 	| Modules	|
@@ -358,267 +364,274 @@ void acst(void)
 	}
 }
 
-void fcs(void)
+void fcs1(void)
 {
-	unsigned long ev;
-	msgQEvStart(mqfcs1, VXEV01, EVENTS_SEND_IF_FREE);
-	msgQEvStart(mqfcs2, VXEV02, EVENTS_SEND_IF_FREE);
-	msgQEvStart(mqfcs3, VXEV03, EVENTS_SEND_IF_FREE);
-	msgQEvStart(mqfcs4, VXEV04, EVENTS_SEND_IF_FREE);
-	msgQEvStart(mqfcs5, VXEV05, EVENTS_SEND_IF_FREE);
+	unsigned char bufr[15];
 	FOREVER {
-		eventReceive(VXEV01 | VXEV02 | VXEV03 | VXEV04 | VXEV05, EVENTS_WAIT_ANY, WAIT_FOREVER, &ev);
-		if (ev & VXEV01) {
-			static unsigned char bufr[15];
-			msgQReceive(mqfcs1, bufr, 15, NO_WAIT);
-			unsigned long id[13] = {0x380A9010, 0x400A9020, 0x480A9030, 0x500A9040, 0x580A9050, 0x600A9060, 0x680A9070, 0x700A9080, 0x780A9090, 0x800A90A0, 0x880AC0B0, 0x900A80B0, 0x980A80B0};
-			unsigned char i;
-			for (i = 0; i < 13; i++)
-				if (*(unsigned long *)(bufr + 1) == id[i])
-					break;
-			if (i > 12)
-				continue;
-			memcpy((unsigned char *)&fcsd.r + 10 * i, bufr + 5, 10);
-			unsigned char j;
-			switch (i) {
-			case 0:
-				etsd.t.ir.find = fcsd.r.ir.find;
-				etsd.t.ir.track = fcsd.r.ir.track;
-				etsd.t.ir.err = fcsd.r.ir.err;
-				if (fcsd.r.ir.err)
-					fcsd.t.acs.errir = 1;
-				else
-					fcsd.t.acs.errir = 0;
-				etsd.t.ir.azi = fcsd.r.ir.azi;
-				etsd.t.ir.pit = fcsd.r.ir.pit;
-				etsd.t.ir.laser = fcsd.r.ir.laser;
-				etsd.t.ir.stamp = ((unsigned long)(fcsd.r.gps.time * 1000) + fcsd.r.ir.stamp) % 30000;
+		msgQReceive(mqfcs1, bufr, 15, WAIT_FOREVER);
+		unsigned long id[13] = {0x380A9010, 0x400A9020, 0x480A9030, 0x500A9040, 0x580A9050, 0x600A9060, 0x680A9070, 0x700A9080, 0x780A9090, 0x800A90A0, 0x880AC0B0, 0x900A80B0, 0x980A80B0};
+		unsigned char i;
+		for (i = 0; i < 13; i++)
+			if (*(unsigned long *)(bufr + 1) == id[i])
 				break;
-			case 1:
-				etsd.t.sv.mov = fcsd.r.sv.mov;
-				etsd.t.sv.err = fcsd.r.sv.err;
-				if (fcsd.r.sv.err)
-					fcsd.t.acs.errsv = 1;
-				else
-					fcsd.t.acs.errsv = 0;
-				etsd.t.sv.azi = fcsd.r.sv.azi;
-				etsd.t.sv.pit = fcsd.r.sv.pit;
-				etsd.t.sv.stamp = ((unsigned long)(fcsd.r.gps.time * 1000) + fcsd.r.sv.stamp) % 30000;
-				break;
-			case 2:
-			case 3:
-			case 4:
-			case 5:
-			case 6:
-			case 7:
-			case 8:
-			case 9:
-				mlsd.t.m[i - 2].ajc = fcsd.r.m[i - 2].ajc;
-				mlsd.t.m[i - 2].tail = fcsd.r.m[i - 2].tail;
-				mlsd.t.m[i - 2].mod = fcsd.r.m[i - 2].mod;
-				mlsd.t.m[i - 2].exist = fcsd.r.m[i - 2].exist;
-				mlsd.t.m[i - 2].cut = fcsd.r.m[i - 2].cut;
-				mlsd.t.m[i - 2].pin0 = fcsd.r.m[i - 2].pin0;
-				mlsd.t.m[i - 2].pin1 = fcsd.r.m[i - 2].pin1;
-				mlsd.t.m[i - 2].ready = fcsd.r.m[i - 2].ready;
-				mlsd.t.m[i - 2].safe = fcsd.r.m[i - 2].safe;
-				mlsd.t.m[i - 2].regret = fcsd.r.m[i - 2].regret;
-				mlsd.t.m[i - 2].battery = fcsd.r.m[i - 2].battery;
-				mlsd.t.m[i - 2].feedback = fcsd.r.m[i - 2].feedback;
-				mlsd.t.m[i - 2].engine = fcsd.r.m[i - 2].engine;
-				*(unsigned char *)&mlsd.t.m[i - 2].err = *(unsigned char *)&fcsd.r.m[i - 2].err;
-				if(*(unsigned char *)&fcsd.r.m[i - 2].err) {
-					int lockkey = intLock();
-					fcsd.t.acs.mls &= ~(0xC000 >> (i - 2) * 2);
-					fcsd.t.acs.mls |= (0x0003 << (7 - (i - 2)) * 2);
-					intUnlock(lockkey);
-				} else if (!fcsd.r.m[i - 2].exist) {
-					fcsd.t.acs.mls &= ~(0xC000 >> (i - 2) * 2);
-				} else if (!fcsd.r.m[i - 2].ready) {
-					int lockkey = intLock();
-					fcsd.t.acs.mls &= ~(0xC000 >> (i - 2) * 2);
-					fcsd.t.acs.mls |= (0x0001 << (7 - (i - 2)) * 2);
-					intUnlock(lockkey);
-				} else {
-					int lockkey = intLock();
-					fcsd.t.acs.mls &= ~(0xC000 >> (i - 2) * 2);
-					fcsd.t.acs.mls |= (0x0002 << (7 - (i - 2)) * 2);
-					intUnlock(lockkey);
-				}
-				for (j = 0; j < 8; j++)
-					if (*(unsigned char *)&fcsd.r.m[j].err)
-						break;
-				if (j < 8)
-					fcsd.t.acs.errm = 1;
-				else
-					fcsd.t.acs.errm = 0;
-				for (j = 0; j < 8; j++) {
-					if (*(unsigned char *)&fcsd.r.m[j].err)
-						etsd.t.m.err |= (0x01 << j);
-					else
-						etsd.t.m.err &= ~(0x01 << j);
-					if (fcsd.r.m[j].ready)
-						etsd.t.m.ready |= (0x01 << j);
-					else
-						etsd.t.m.ready &= ~(0x01 << j);
-				}
-				mlsd.t.m[i - 2].gas = fcsd.r.m[i - 2].gas;
-				break;
-			case 10:
-				etsd.t.dp.sv1 = fcsd.r.dp.sv1;
-				etsd.t.dp.sv2 = fcsd.r.dp.sv2;
-				etsd.t.dp.get = fcsd.r.dp.get;
-				etsd.t.dp.guide = fcsd.r.dp.guide;
-				etsd.t.dp.pos = fcsd.r.dp.pos;
-				fcsd.t.acs.num = fcsd.r.dp.num + 1;
-				mlsd.t.dp.mx = bitrev(fcsd.r.dp.mx);
-				mlsd.t.dp.launch = fcsd.r.dp.launch;
-				mlsd.t.dp.safe = fcsd.r.dp.safe;
-				mlsd.t.dp.cage = fcsd.r.dp.cage;
-				mlsd.t.dp.chk = fcsd.r.dp.chk;
-				mlsd.t.dp.rst = fcsd.r.dp.rst;
-				mlsd.t.dp.ajc = fcsd.r.dp.ajc;
-				mlsd.t.dp.tail = fcsd.r.dp.tail;
-				mlsd.t.dp.mod = fcsd.r.dp.mod;
-				etsd.t.dp.rkra = fcsd.r.dp.rkra;
-				etsd.t.dp.rkrp = fcsd.r.dp.rkrp;
-				if (fcsd.r.dp.laser1hz || fcsd.r.dp.laser5hz)
-					etsd.t.dp.laser = 1;
-				else
-					etsd.t.dp.laser = 0;
-				if (fcsd.r.dp.laser1hz)
-					etsd.t.ir.freq = etsd.t.dp.freq = 0;
-				else if (fcsd.r.dp.laser5hz)
-					etsd.t.ir.freq = etsd.t.dp.freq = 1;
-				etsd.t.dp.ir = fcsd.r.dp.ir;
-				break;
-			case 11:
-				fcsd.t.acs.stp1l = fcsd.t.dp.stp1l = fcsd.r.dp.stp1l;
-				fcsd.t.acs.stp1r = fcsd.t.dp.stp1r = fcsd.r.dp.stp1r;
-				fcsd.t.acs.fbd1l = fcsd.t.dp.fbd1l = fcsd.r.dp.fbd1l;
-				fcsd.t.acs.fbd1r = fcsd.t.dp.fbd1r = fcsd.r.dp.fbd1r;
-				fcsd.t.acs.fbd2l = fcsd.t.dp.fbd2l = fcsd.r.dp.fbd2l;
-				fcsd.t.acs.fbd2r = fcsd.t.dp.fbd2r = fcsd.r.dp.fbd2r;
-				etsd.t.dp.heading = fcsd.r.dp.heading;
-				break;
-			case 12:
-				etsd.t.dp.lat = fcsd.r.dp.lat;
-				etsd.t.dp.ns = fcsd.r.dp.ns;
-				etsd.t.dp.lon = fcsd.r.dp.lon;
-				etsd.t.dp.ew = fcsd.r.dp.ew;
-				etsd.t.dp.alt = fcsd.r.dp.alt;
-				break;
-			default:
-				break;
-			}
-			msgQSend(mqets, &etsd.t, sizeof(etsd.t), NO_WAIT, MSG_PRI_NORMAL);
-			msgQSend(mqmls, &mlsd.t, sizeof(mlsd.t), NO_WAIT, MSG_PRI_NORMAL);
-			unsigned k;
-			if (i > 1 && i < 10)
-				k = 2;
-			else if (i > 9)
-				k = i - 6;
+		if (i > 12)
+			continue;
+		memcpy((unsigned char *)&fcsd.r + 10 * i, bufr + 5, 10);
+		unsigned char j;
+		switch (i) {
+		case 0:
+			etsd.t.ir.find = fcsd.r.ir.find;
+			etsd.t.ir.track = fcsd.r.ir.track;
+			etsd.t.ir.err = fcsd.r.ir.err;
+			if (fcsd.r.ir.err)
+				fcsd.t.acs.errir = 1;
 			else
-				k = i;
-			static unsigned char buft[9];
-			buft[8] = k;
-			memcpy(buft, (unsigned char *)&fcsd.t + 8 * k, 8);
-			msgQSend(mqcant, buft, 9, NO_WAIT, MSG_PRI_NORMAL);
-		}
-		if (ev & VXEV02) {
-			msgQReceive(mqfcs2, &fcsd.r.gps, sizeof(fcsd.r.gps), NO_WAIT);
-			etsd.t.gps.stamp = (unsigned long)(fcsd.r.gps.time * 1000) % 30000;
-			etsd.t.gps.heading = fcsd.t.dp.heading = (short)(fcsd.r.gps.heading / 360 * 65536);
-			etsd.t.gps.lat = fcsd.t.dp.lat = fcsd.t.acs.lat = (unsigned long)(fabs(fcsd.r.gps.lat) * 60 * 60 * 10);
-			if (fcsd.r.gps.lat > 0)
-				etsd.t.gps.ns = fcsd.t.dp.ns = fcsd.t.acs.ns = 0;
+				fcsd.t.acs.errir = 0;
+			etsd.t.ir.azi = fcsd.r.ir.azi;
+			etsd.t.ir.pit = fcsd.r.ir.pit;
+			etsd.t.ir.laser = fcsd.r.ir.laser;
+			etsd.t.ir.stamp = ((unsigned long)(fcsd.r.gps.time * 1000) + fcsd.r.ir.stamp) % 30000;
+			break;
+		case 1:
+			etsd.t.sv.mov = fcsd.r.sv.mov;
+			etsd.t.sv.err = fcsd.r.sv.err;
+			if (fcsd.r.sv.err)
+				fcsd.t.acs.errsv = 1;
 			else
-				etsd.t.gps.ns = fcsd.t.dp.ns = fcsd.t.acs.ns = 1;
-			etsd.t.gps.lon = fcsd.t.dp.lon = fcsd.t.acs.lon = (unsigned long)(fabs(fcsd.r.gps.lon) * 60 * 60 * 10);
-			if (fcsd.r.gps.lon > 0)
-				etsd.t.gps.ew = fcsd.t.dp.ew = fcsd.t.acs.ew = 0;
-			else
-				etsd.t.gps.ew = fcsd.t.dp.ew = fcsd.t.acs.ew = 1;
-			etsd.t.gps.alt = fcsd.t.dp.alt = fcsd.t.acs.alt = (short)(fcsd.r.gps.alt / 10);
-			msgQSend(mqets, &etsd.t, sizeof(etsd.t), NO_WAIT, MSG_PRI_NORMAL);
-		}
-		if (ev & VXEV03) {
-			msgQReceive(mqfcs3, &fcsd.r.acs, sizeof(fcsd.r.acs), NO_WAIT);
-			etsd.t.acs.lat = fcsd.r.acs.lat;
-			etsd.t.acs.ns = fcsd.r.acs.ns;
-			etsd.t.acs.lon = fcsd.r.acs.lon;
-			etsd.t.acs.ew = fcsd.r.acs.ew;
-			etsd.t.acs.hgt = fcsd.t.dp.hgt = fcsd.r.acs.hgt;
-			etsd.t.acs.vx = fcsd.r.acs.vx;
-			etsd.t.acs.vy = fcsd.r.acs.vy;
-			etsd.t.acs.vz = fcsd.r.acs.vz;
-			etsd.t.acs.stamp = fcsd.r.acs.stamp;
-			fcsd.t.dp.spd = sqrt(pow(fcsd.r.acs.vx, 2) + pow(fcsd.r.acs.vy, 2) + pow(fcsd.r.acs.vz, 2));
-			msgQSend(mqets, &etsd.t, sizeof(etsd.t), NO_WAIT, MSG_PRI_NORMAL);
-			msgQSend(mqacst, &fcsd.t.acs, sizeof(fcsd.t.acs), NO_WAIT, MSG_PRI_NORMAL);
-		}
-		if (ev & VXEV04) {
-			msgQReceive(mqfcs4, &etsd.r, sizeof(etsd.r), NO_WAIT);
-			fcsd.t.ir.ir = etsd.r.ir.ir;
-			fcsd.t.ir.get = etsd.r.ir.get;
-			fcsd.t.ir.azi = etsd.r.ir.azi;
-			fcsd.t.ir.pit = etsd.r.ir.pit;
-			fcsd.t.sv.sv = etsd.r.sv.sv1 && etsd.r.sv.sv2;
-			fcsd.t.sv.azi = fcsd.t.sv.azi;
-			fcsd.t.sv.pit = fcsd.t.sv.pit;
-			mlsd.t.ets.svstp = etsd.r.sv.stp;
-			mlsd.t.ets.svfbd = etsd.r.sv.fbd;
-			mlsd.t.ets.ahead = etsd.r.sv.ahead;
-			fcsd.t.dp.direct = etsd.r.guide.direct;
-			fcsd.t.dp.attack = etsd.r.guide.attack;
-			fcsd.t.dp.remain = etsd.r.guide.remain;
-			fcsd.t.dp.dist = etsd.r.guide.dist;
-			fcsd.t.acs.ppi = fcsd.t.dp.ppi = etsd.r.sv.azi + (short)(fcsd.r.gps.heading / 360 * 65536);
-		}
-		if (ev & VXEV05) {
-			msgQReceive(mqfcs5, &mlsd.r, sizeof(mlsd.r), NO_WAIT);
-			fcsd.t.m.umask = mlsd.r.umask;
-			fcsd.t.m.mod = mlsd.r.m[0].mod;
-			fcsd.t.m.tail = mlsd.r.m[0].tail;
-			fcsd.t.m.ajc = mlsd.r.m[0].ajc;
-			unsigned char i;
-			for (i = 0; i < 8; i++) {
-				unsigned long tmp = 0;
-				if (mlsd.r.m[i].chk)
-					tmp |= 0x00000008;
-				else
-					tmp &= ~0x00000008;
-				if (mlsd.r.m[i].up)
-					tmp |= 0x00000004;
-				else
-					tmp &= ~0x00000004;
-				if (mlsd.r.m[i].cage)
-					tmp |= 0x00000002;
-				else
-					tmp &= ~0x00000002;
-				if (mlsd.r.m[i].safe)
-					openJDQ(i + 1);
-				else
-					closeJDQ(i + 1);
-				if (mlsd.r.m[i].launch)
-					tmp |= 0x00000001;
-				else
-					tmp &= ~0x00000001;
+				fcsd.t.acs.errsv = 0;
+			etsd.t.sv.azi = fcsd.r.sv.azi;
+			etsd.t.sv.pit = fcsd.r.sv.pit;
+			etsd.t.sv.stamp = ((unsigned long)(fcsd.r.gps.time * 1000) + fcsd.r.sv.stamp) % 30000;
+			break;
+		case 2:
+		case 3:
+		case 4:
+		case 5:
+		case 6:
+		case 7:
+		case 8:
+		case 9:
+			mlsd.t.m[i - 2].ajc = fcsd.r.m[i - 2].ajc;
+			mlsd.t.m[i - 2].tail = fcsd.r.m[i - 2].tail;
+			mlsd.t.m[i - 2].mod = fcsd.r.m[i - 2].mod;
+			mlsd.t.m[i - 2].exist = fcsd.r.m[i - 2].exist;
+			mlsd.t.m[i - 2].cut = fcsd.r.m[i - 2].cut;
+			mlsd.t.m[i - 2].pin0 = fcsd.r.m[i - 2].pin0;
+			mlsd.t.m[i - 2].pin1 = fcsd.r.m[i - 2].pin1;
+			mlsd.t.m[i - 2].ready = fcsd.r.m[i - 2].ready;
+			mlsd.t.m[i - 2].safe = fcsd.r.m[i - 2].safe;
+			mlsd.t.m[i - 2].regret = fcsd.r.m[i - 2].regret;
+			mlsd.t.m[i - 2].battery = fcsd.r.m[i - 2].battery;
+			mlsd.t.m[i - 2].feedback = fcsd.r.m[i - 2].feedback;
+			mlsd.t.m[i - 2].engine = fcsd.r.m[i - 2].engine;
+			*(unsigned char *)&mlsd.t.m[i - 2].err = *(unsigned char *)&fcsd.r.m[i - 2].err;
+			if(*(unsigned char *)&fcsd.r.m[i - 2].err) {
 				int lockkey = intLock();
-				fcsd.t.m.cmd &= ~(0xF0000000 >> i * 4);
-				fcsd.t.m.cmd |= (tmp << (7 - i) * 4);
+				fcsd.t.acs.mls &= ~(0xC000 >> (i - 2) * 2);
+				fcsd.t.acs.mls |= (0x0003 << (7 - (i - 2)) * 2);
+				intUnlock(lockkey);
+			} else if (!fcsd.r.m[i - 2].exist) {
+				fcsd.t.acs.mls &= ~(0xC000 >> (i - 2) * 2);
+			} else if (!fcsd.r.m[i - 2].ready) {
+				int lockkey = intLock();
+				fcsd.t.acs.mls &= ~(0xC000 >> (i - 2) * 2);
+				fcsd.t.acs.mls |= (0x0001 << (7 - (i - 2)) * 2);
+				intUnlock(lockkey);
+			} else {
+				int lockkey = intLock();
+				fcsd.t.acs.mls &= ~(0xC000 >> (i - 2) * 2);
+				fcsd.t.acs.mls |= (0x0002 << (7 - (i - 2)) * 2);
 				intUnlock(lockkey);
 			}
-			for (i = 0; i < 8; i++)
-				if (mlsd.r.m[i].rst)
+			for (j = 0; j < 8; j++)
+				if (*(unsigned char *)&fcsd.r.m[j].err)
 					break;
-			if (i == 8) {
-				openJDQ(9);
-				openJDQ(10);
-			} else {
-				closeJDQ(9);
-				closeJDQ(10);
+			if (j < 8)
+				fcsd.t.acs.errm = 1;
+			else
+				fcsd.t.acs.errm = 0;
+			for (j = 0; j < 8; j++) {
+				if (*(unsigned char *)&fcsd.r.m[j].err)
+					etsd.t.m.err |= (0x01 << j);
+				else
+					etsd.t.m.err &= ~(0x01 << j);
+				if (fcsd.r.m[j].ready)
+					etsd.t.m.ready |= (0x01 << j);
+				else
+					etsd.t.m.ready &= ~(0x01 << j);
 			}
+			mlsd.t.m[i - 2].gas = fcsd.r.m[i - 2].gas;
+			break;
+		case 10:
+			etsd.t.dp.sv1 = fcsd.r.dp.sv1;
+			etsd.t.dp.sv2 = fcsd.r.dp.sv2;
+			etsd.t.dp.get = fcsd.r.dp.get;
+			etsd.t.dp.guide = fcsd.r.dp.guide;
+			etsd.t.dp.pos = fcsd.r.dp.pos;
+			fcsd.t.acs.num = fcsd.r.dp.num + 1;
+			mlsd.t.dp.mx = bitrev(fcsd.r.dp.mx);
+			mlsd.t.dp.launch = fcsd.r.dp.launch;
+			mlsd.t.dp.safe = fcsd.r.dp.safe;
+			mlsd.t.dp.cage = fcsd.r.dp.cage;
+			mlsd.t.dp.chk = fcsd.r.dp.chk;
+			mlsd.t.dp.rst = fcsd.r.dp.rst;
+			mlsd.t.dp.ajc = fcsd.r.dp.ajc;
+			mlsd.t.dp.tail = fcsd.r.dp.tail;
+			mlsd.t.dp.mod = fcsd.r.dp.mod;
+			etsd.t.dp.rkra = fcsd.r.dp.rkra;
+			etsd.t.dp.rkrp = fcsd.r.dp.rkrp;
+			if (fcsd.r.dp.laser1hz || fcsd.r.dp.laser5hz)
+				etsd.t.dp.laser = 1;
+			else
+				etsd.t.dp.laser = 0;
+			if (fcsd.r.dp.laser1hz)
+				etsd.t.ir.freq = etsd.t.dp.freq = 0;
+			else if (fcsd.r.dp.laser5hz)
+				etsd.t.ir.freq = etsd.t.dp.freq = 1;
+			etsd.t.dp.ir = fcsd.r.dp.ir;
+			break;
+		case 11:
+			fcsd.t.acs.stp1l = fcsd.t.dp.stp1l = fcsd.r.dp.stp1l;
+			fcsd.t.acs.stp1r = fcsd.t.dp.stp1r = fcsd.r.dp.stp1r;
+			fcsd.t.acs.fbd1l = fcsd.t.dp.fbd1l = fcsd.r.dp.fbd1l;
+			fcsd.t.acs.fbd1r = fcsd.t.dp.fbd1r = fcsd.r.dp.fbd1r;
+			fcsd.t.acs.fbd2l = fcsd.t.dp.fbd2l = fcsd.r.dp.fbd2l;
+			fcsd.t.acs.fbd2r = fcsd.t.dp.fbd2r = fcsd.r.dp.fbd2r;
+			etsd.t.dp.heading = fcsd.r.dp.heading;
+			break;
+		case 12:
+			etsd.t.dp.lat = fcsd.r.dp.lat;
+			etsd.t.dp.ns = fcsd.r.dp.ns;
+			etsd.t.dp.lon = fcsd.r.dp.lon;
+			etsd.t.dp.ew = fcsd.r.dp.ew;
+			etsd.t.dp.alt = fcsd.r.dp.alt;
+			break;
+		default:
+			break;
+		}
+		msgQSend(mqets, &etsd.t, sizeof(etsd.t), NO_WAIT, MSG_PRI_NORMAL);
+		msgQSend(mqmls, &mlsd.t, sizeof(mlsd.t), NO_WAIT, MSG_PRI_NORMAL);
+		unsigned k;
+		if (i > 1 && i < 10)
+			k = 2;
+		else if (i > 9)
+			k = i - 6;
+		else
+			k = i;
+		static unsigned char buft[9];
+		buft[8] = k;
+		memcpy(buft, (unsigned char *)&fcsd.t + 8 * k, 8);
+		msgQSend(mqcant, buft, 9, NO_WAIT, MSG_PRI_NORMAL);
+	}
+}
+
+void fcs2(void)
+{
+	FOREVER {
+		msgQReceive(mqfcs2, &fcsd.r.gps, sizeof(fcsd.r.gps), WAIT_FOREVER);
+		etsd.t.gps.stamp = (unsigned long)(fcsd.r.gps.time * 1000) % 30000;
+		etsd.t.gps.heading = fcsd.t.dp.heading = (short)(fcsd.r.gps.heading / 360 * 65536);
+		etsd.t.gps.lat = fcsd.t.dp.lat = fcsd.t.acs.lat = (unsigned long)(fabs(fcsd.r.gps.lat) * 60 * 60 * 10);
+		if (fcsd.r.gps.lat > 0)
+			etsd.t.gps.ns = fcsd.t.dp.ns = fcsd.t.acs.ns = 0;
+		else
+			etsd.t.gps.ns = fcsd.t.dp.ns = fcsd.t.acs.ns = 1;
+		etsd.t.gps.lon = fcsd.t.dp.lon = fcsd.t.acs.lon = (unsigned long)(fabs(fcsd.r.gps.lon) * 60 * 60 * 10);
+		if (fcsd.r.gps.lon > 0)
+			etsd.t.gps.ew = fcsd.t.dp.ew = fcsd.t.acs.ew = 0;
+		else
+			etsd.t.gps.ew = fcsd.t.dp.ew = fcsd.t.acs.ew = 1;
+		etsd.t.gps.alt = fcsd.t.dp.alt = fcsd.t.acs.alt = (short)(fcsd.r.gps.alt / 10);
+		msgQSend(mqets, &etsd.t, sizeof(etsd.t), NO_WAIT, MSG_PRI_NORMAL);
+	}
+}
+
+void fcs3(void)
+{
+	FOREVER {
+		msgQReceive(mqfcs3, &fcsd.r.acs, sizeof(fcsd.r.acs), WAIT_FOREVER);
+		etsd.t.acs.lat = fcsd.r.acs.lat;
+		etsd.t.acs.ns = fcsd.r.acs.ns;
+		etsd.t.acs.lon = fcsd.r.acs.lon;
+		etsd.t.acs.ew = fcsd.r.acs.ew;
+		etsd.t.acs.hgt = fcsd.t.dp.hgt = fcsd.r.acs.hgt;
+		etsd.t.acs.vx = fcsd.r.acs.vx;
+		etsd.t.acs.vy = fcsd.r.acs.vy;
+		etsd.t.acs.vz = fcsd.r.acs.vz;
+		etsd.t.acs.stamp = fcsd.r.acs.stamp;
+		fcsd.t.dp.spd = sqrt(pow(fcsd.r.acs.vx, 2) + pow(fcsd.r.acs.vy, 2) + pow(fcsd.r.acs.vz, 2));
+		msgQSend(mqets, &etsd.t, sizeof(etsd.t), NO_WAIT, MSG_PRI_NORMAL);
+		msgQSend(mqacst, &fcsd.t.acs, sizeof(fcsd.t.acs), NO_WAIT, MSG_PRI_NORMAL);
+	}
+}
+
+void fcs4(void)
+{
+	FOREVER {
+		msgQReceive(mqfcs4, &etsd.r, sizeof(etsd.r), WAIT_FOREVER);
+		fcsd.t.ir.ir = etsd.r.ir.ir;
+		fcsd.t.ir.get = etsd.r.ir.get;
+		fcsd.t.ir.azi = etsd.r.ir.azi;
+		fcsd.t.ir.pit = etsd.r.ir.pit;
+		fcsd.t.sv.sv = etsd.r.sv.sv1 && etsd.r.sv.sv2;
+		fcsd.t.sv.azi = fcsd.t.sv.azi;
+		fcsd.t.sv.pit = fcsd.t.sv.pit;
+		mlsd.t.ets.svstp = etsd.r.sv.stp;
+		mlsd.t.ets.svfbd = etsd.r.sv.fbd;
+		mlsd.t.ets.ahead = etsd.r.sv.ahead;
+		fcsd.t.dp.direct = etsd.r.guide.direct;
+		fcsd.t.dp.attack = etsd.r.guide.attack;
+		fcsd.t.dp.remain = etsd.r.guide.remain;
+		fcsd.t.dp.dist = etsd.r.guide.dist;
+		fcsd.t.acs.ppi = fcsd.t.dp.ppi = etsd.r.sv.azi + (short)(fcsd.r.gps.heading / 360 * 65536);
+	}
+}
+
+void fcs5(void)
+{
+	FOREVER {
+		msgQReceive(mqfcs5, &mlsd.r, sizeof(mlsd.r), WAIT_FOREVER);
+		fcsd.t.m.umask = mlsd.r.umask;
+		fcsd.t.m.mod = mlsd.r.m[0].mod;
+		fcsd.t.m.tail = mlsd.r.m[0].tail;
+		fcsd.t.m.ajc = mlsd.r.m[0].ajc;
+		unsigned char i;
+		for (i = 0; i < 8; i++) {
+			unsigned long tmp = 0;
+			if (mlsd.r.m[i].chk)
+				tmp |= 0x00000008;
+			else
+				tmp &= ~0x00000008;
+			if (mlsd.r.m[i].up)
+				tmp |= 0x00000004;
+			else
+				tmp &= ~0x00000004;
+			if (mlsd.r.m[i].cage)
+				tmp |= 0x00000002;
+			else
+				tmp &= ~0x00000002;
+			if (mlsd.r.m[i].safe)
+				openJDQ(i + 1);
+			else
+				closeJDQ(i + 1);
+			if (mlsd.r.m[i].launch)
+				tmp |= 0x00000001;
+			else
+				tmp &= ~0x00000001;
+			int lockkey = intLock();
+			fcsd.t.m.cmd &= ~(0xF0000000 >> i * 4);
+			fcsd.t.m.cmd |= (tmp << (7 - i) * 4);
+			intUnlock(lockkey);
+		}
+		for (i = 0; i < 8; i++)
+			if (mlsd.r.m[i].rst)
+				break;
+		if (i == 8) {
+			openJDQ(9);
+			openJDQ(10);
+		} else {
+			closeJDQ(9);
+			closeJDQ(10);
 		}
 	}
 }
