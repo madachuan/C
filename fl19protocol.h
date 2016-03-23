@@ -250,6 +250,10 @@ typedef struct {
 			unsigned char remain;
 			unsigned short shortcut;
 			unsigned short dist;
+			short int hgt;
+			signed char vx;
+			signed char vy;
+			signed char vz;
 		} __attribute__((packed)) guide;
 	} r;
 	struct {

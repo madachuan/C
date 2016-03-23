@@ -72,8 +72,8 @@ void fl19(void)
 	mqfcs1 = msgQCreate(1, 15, MSG_Q_FIFO);
 	mqfcs2 = msgQCreate(1, sizeof(fcsd.r.gps), MSG_Q_FIFO);
 	mqfcs3 = msgQCreate(1, sizeof(fcsd.r.acs), MSG_Q_FIFO);
-	mqfcs4 = msgQCreate(1, sizeof(mlsd.r), MSG_Q_FIFO);
-	mqfcs5 = msgQCreate(1, sizeof(etsd.r), MSG_Q_FIFO);
+	mqfcs4 = msgQCreate(1, sizeof(etsd.r), MSG_Q_FIFO);
+	mqfcs5 = msgQCreate(1, sizeof(mlsd.r), MSG_Q_FIFO);
 	mqets = msgQCreate(1, sizeof(etsd.t), MSG_Q_FIFO);
 	mqmls = msgQCreate(1, sizeof(mlsd.t), MSG_Q_FIFO);
 	/*--------------\
@@ -98,12 +98,10 @@ void fl19(void)
 	tfcs3 = taskSpawn("fcs3", 100, VX_FP_TASK, 10000, (FUNCPTR)fcs3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	tfcs4 = taskSpawn("fcs4", 100, VX_FP_TASK, 10000, (FUNCPTR)fcs4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	tfcs5 = taskSpawn("fcs5", 100, VX_FP_TASK, 10000, (FUNCPTR)fcs5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-#if 0
 	/*--------------\
 	| Modules	|
 	\--------------*/
 	tets = taskSpawn("ets", 100, VX_FP_TASK, 10000, (FUNCPTR)ets, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-#endif
 	tmls = taskSpawn("mls", 100, VX_FP_TASK, 10000, (FUNCPTR)mls, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 #if 0
 	/*------\
@@ -336,7 +334,7 @@ void acsr(void)
 			memset(bufr, 0x00, 256);
 			continue;
 		}
-		unsigned i;
+		unsigned char i;
 		for (i = 3; i < bufr[1] - 3 - sizeof(fcsd.r.acs); i++) {
 			if (bufr[i] != 0xD3)
 				continue;
@@ -635,7 +633,11 @@ void fcs5(void)
 		}
 	}
 }
-
+#if 1
+void ets(void)
+{
+}
+#endif
 void mls(void)
 {
 	static MLSD mlsd;
@@ -700,18 +702,13 @@ void mls(void)
 	}
 }
 
-void ets(void)
-{
-	/* ETS Functional Module	*/
-}
-
 void dgps(void)
 {
 	double buft[14] = {1800,95133.800,135,-57.00,196.49,45.83072500,122.61647500,240,-0.279,-0.944,-1.186,9.577,4,6};
 	FOREVER {
 		buft[1]++;
 		counter = 0;
-		msgQSend(mqfcs2, buft, 14, NO_WAIT, MSG_PRI_NORMAL);
+		msgQSend(mqfcs2, buft, sizeof(buft), NO_WAIT, MSG_PRI_NORMAL);
 		taskDelay(60);
 	}
 }
@@ -728,12 +725,12 @@ void dacs(void)
 			angle -= 2 * pi;
 		if (angle <= -pi)
 			angle += 2 * pi;
-		buft[6] = (unsigned long)((sin(angle) * 10 / 111 + 45.83072500) * 36000) & 0x000000FF;
-		buft[7] = ((unsigned long)((sin(angle) * 10 / 111 + 45.83072500) * 36000) & 0x0000FF00) >> 8;
-		buft[8] = ((unsigned long)((sin(angle) * 10 / 111 + 45.83072500) * 36000) & 0x00FF0000) >> 16;
-		buft[9] = (unsigned long)((cos(angle) * 10 / 111 / cos(45.83072500 / 180 * pi) + 122.61647500) * 36000) & 0x000000FF;
-		buft[10] = ((unsigned long)((cos(angle) * 10 / 111 / cos(45.83072500 / 180 * pi) + 122.61647500) * 36000) & 0x0000FF00) >> 8;
-		buft[11] = ((unsigned long)((cos(angle) * 10 / 111 / cos(45.83072500 / 180 * pi) + 122.61647500) * 36000) & 0x00FF0000) >> 16;
+		buft[6] = (unsigned long)((sin(angle) * 100 / 111 + 45.83072500) * 36000) & 0x000000FF;
+		buft[7] = ((unsigned long)((sin(angle) * 100 / 111 + 45.83072500) * 36000) & 0x0000FF00) >> 8;
+		buft[8] = ((unsigned long)((sin(angle) * 100 / 111 + 45.83072500) * 36000) & 0x00FF0000) >> 16;
+		buft[9] = (unsigned long)((cos(angle) * 100 / 111 / cos(45.83072500 / 180 * pi) + 122.61647500) * 36000) & 0x000000FF;
+		buft[10] = ((unsigned long)((cos(angle) * 100 / 111 / cos(45.83072500 / 180 * pi) + 122.61647500) * 36000) & 0x0000FF00) >> 8;
+		buft[11] = ((unsigned long)((cos(angle) * 100 / 111 / cos(45.83072500 / 180 * pi) + 122.61647500) * 36000) & 0x00FF0000) >> 16;
 		buft[17] = (unsigned long)(fcsd.r.gps.time * 1000) % 30000;
 		buft[18] = ((unsigned long)(fcsd.r.gps.time * 1000) % 30000) >> 8;
 		buft[19] = chkxor(buft + 4, 15);
