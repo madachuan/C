@@ -1,11 +1,11 @@
 typedef struct {
 	struct {
 		struct {
-			unsigned char res:3;
+			unsigned char :3;
 			unsigned char find:1;
-			unsigned char res1:1;
+			unsigned char :1;
 			unsigned char ir:1;
-			unsigned char res2:1;
+			unsigned char :1;
 			unsigned char track:1;
 			unsigned char err;
 			short azi;
@@ -14,22 +14,22 @@ typedef struct {
 			unsigned short stamp;
 		} __attribute__((packed)) ir;
 		struct {
-			unsigned char res:4;
+			unsigned char :4;
 			unsigned char mov:1;
-			unsigned char res1:3;
+			unsigned char :3;
 			unsigned char err;
 			short azi;
 			short pit;
-			unsigned short res2;
+			unsigned short res;
 			unsigned short stamp;
 		} __attribute__((packed)) sv;
 		struct {
 			unsigned char num;
-			unsigned char res1:5;
+			unsigned char :5;
 			unsigned char ajc:1;
 			unsigned char tail:1;
 			unsigned char mod:1;
-			unsigned char res2;
+			unsigned char res;
 			unsigned char exist:1;
 			unsigned char cut:1;
 			unsigned char pin0:1;
@@ -37,11 +37,11 @@ typedef struct {
 			unsigned char ready:1;
 			unsigned char safe:1;
 			unsigned char regret:1;
-			unsigned char res3:1;
-			unsigned char res4:4;
+			unsigned char :1;
+			unsigned char :4;
 			unsigned char battery:1;
 			unsigned char feedback:1;
-			unsigned char res5:1;
+			unsigned char :1;
 			unsigned char engine:1;
 			struct {
 				unsigned char core:1;
@@ -50,10 +50,10 @@ typedef struct {
 				unsigned char pin:1;
 				unsigned char top:1;
 				unsigned char timeout:1;
-				unsigned char res:1;
+				unsigned char :1;
 				unsigned char dumb:1;
 			} err;
-			unsigned char res6;
+			unsigned char res1;
 			unsigned char gas;
 			unsigned short stamp;
 		} m[8];
@@ -83,7 +83,7 @@ typedef struct {
 			unsigned char whiteblack:1;
 			unsigned char backmid:1;
 			unsigned char channel:1;
-			unsigned char res:1;
+			unsigned char :1;
 			unsigned char display:1;
 			unsigned char ccdzoomsub:1;
 			unsigned char ccdzoomplus:1;
@@ -91,7 +91,7 @@ typedef struct {
 			unsigned char ccdfocusplus:1;
 			unsigned char irfocussub:1;
 			unsigned char irfocusplus:1;
-			unsigned char res1;
+			unsigned char res;
 			unsigned short stamp1;
 			signed char stp1l;
 			signed char stp1r;
@@ -142,32 +142,32 @@ typedef struct {
 	} r;
 	struct {
 		struct {
-			unsigned char res:5;
+			unsigned char :5;
 			unsigned char ir:1;
 			unsigned char get:1;
-			unsigned char res1:1;
-			unsigned char res2;
+			unsigned char :1;
+			unsigned char res;
 			short azi;
 			short pit;
-			unsigned short res3;
+			unsigned short res1;
 		} __attribute__((packed)) ir;
 		struct {
-			unsigned char res:4;
+			unsigned char :4;
 			unsigned char sv:1;
-			unsigned char res1:3;
-			unsigned char res2;
+			unsigned char :3;
+			unsigned char res;
 			short azi;
 			short pit;
-			unsigned short res3;
+			unsigned short res1;
 		} __attribute__((packed)) sv;
 		struct {
 			unsigned char umask;
-			unsigned char res:5;
+			unsigned char :5;
 			unsigned char ajc:1;
 			unsigned char tail:1;
 			unsigned char mod:1;
 			unsigned long cmd;
-			unsigned char res1;
+			unsigned char res;
 			unsigned char ctr;
 		} __attribute__((packed)) m;
 		unsigned char pw[8];
@@ -218,7 +218,7 @@ typedef struct {
 			unsigned char xor;
 		} __attribute__((packed)) acs;
 	} t;
-} FCSD;
+} Fcsd;
 
 typedef struct {
 	struct {
@@ -229,7 +229,7 @@ typedef struct {
 			unsigned char get:1;
 			unsigned char laser:1;
 			unsigned char freq:1;
-			unsigned char res:2;
+			unsigned char :2;
 			short azi;
 			short pit;
 		} __attribute__((packed)) ir;
@@ -239,14 +239,14 @@ typedef struct {
 			unsigned char sv1:1;
 			unsigned char sv2:1;
 			unsigned char ahead:1;
-			unsigned char res:3;
+			unsigned char :3;
 			short azi;
 			short pit;
 		} __attribute__((packed)) sv;
 		struct {
 			unsigned char direct:1;
 			unsigned char attack:1;
-			unsigned char res:6;
+			unsigned char :6;
 			unsigned char remain;
 			unsigned short shortcut;
 			unsigned short dist;
@@ -263,7 +263,7 @@ typedef struct {
 			unsigned char find:1;
 			unsigned char track:1;
 			unsigned char freq:1;
-			unsigned char res:5;
+			unsigned char :5;
 			short azi;
 			short pit;
 			unsigned short laser;
@@ -273,7 +273,7 @@ typedef struct {
 			unsigned char err;
 			unsigned char stop:1;
 			unsigned char mov:1;
-			unsigned char res:6;
+			unsigned char :6;
 			short azi;
 			short pit;
 		} __attribute__((packed)) sv;
@@ -326,7 +326,7 @@ typedef struct {
 			signed char vz;
 		} __attribute__((packed)) acs;
 	} t;
-} ETSD;
+} Etsd;
 
 typedef struct {
 	struct {
@@ -341,7 +341,7 @@ typedef struct {
 			unsigned char cage:1;
 			unsigned char safe:1;
 			unsigned char launch:1;
-			unsigned char res:7;
+			unsigned char :7;
 		} m[8];
 	} r;
 	struct {
@@ -349,7 +349,7 @@ typedef struct {
 			unsigned char svstp:1;
 			unsigned char svfbd:1;
 			unsigned char ahead:1;
-			unsigned char res:5;
+			unsigned char :5;
 		} ets;
 		struct {
 			struct {
@@ -359,7 +359,7 @@ typedef struct {
 				unsigned char pin:1;
 				unsigned char top:1;
 				unsigned char timeout:1;
-				unsigned char res:1;
+				unsigned char :1;
 				unsigned char dumb:1;
 			} err;
 			unsigned char mod:1;
@@ -375,7 +375,7 @@ typedef struct {
 			unsigned char battery:1;
 			unsigned char feedback:1;
 			unsigned char engine:1;
-			unsigned char res:3;
+			unsigned char :3;
 			unsigned char gas;
 		} m[8];
 		struct {
@@ -390,4 +390,4 @@ typedef struct {
 			unsigned char rst:1;
 		} dp;
 	} t;
-} MLSD;
+} Mlsd;

@@ -52,9 +52,9 @@ int tdgps;
 int tdacs;
 unsigned short counter;
 unsigned char tick;
-FCSD fcsd;
-ETSD etsd;
-MLSD mlsd;
+Fcsd fcsd;
+Etsd etsd;
+Mlsd mlsd;
 
 /*
  * =====================\
@@ -640,7 +640,7 @@ void ets(void)
 #endif
 void mls(void)
 {
-	static MLSD mlsd;
+	static Mlsd mlsd;
 	FOREVER {
 		msgQReceive(mqmls, &mlsd.t, sizeof(mlsd.t), WAIT_FOREVER);
 		unsigned char umask = 0x00;
@@ -771,7 +771,7 @@ void tmri(void)
 	semFlush(sbtmr);
 }
 
-void mlsp(unsigned char avail, MLSD *mlsd)
+void mlsp(unsigned char avail, Mlsd *mlsd)
 {
 	static unsigned char force;
 	unsigned char i;

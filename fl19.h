@@ -18,4 +18,4 @@ void dgps(void);
 void dacs(void);
 void cani(void);
 void tmri(void);
-void mlsp(unsigned char avail, MLSD *mlsd);
+void mlsp(unsigned char avail, Mlsd *mlsd);
