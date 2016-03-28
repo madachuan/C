@@ -616,10 +616,17 @@ void fcs5(void)
 				tmp |= 0x00000001;
 			else
 				tmp &= ~0x00000001;
-			int lockkey = intLock();
-			fcsd.t.m.cmd &= ~(0xF0000000 >> i * 4);
-			fcsd.t.m.cmd |= (tmp << (7 - i) * 4);
-			intUnlock(lockkey);
+			if (i % 2) {
+				int lockkey = intLock();
+				fcsd.t.m.cmd &= ~(0x0000000F << (i - 1) * 4);
+				fcsd.t.m.cmd |= (tmp << (i - 1) * 4);
+				intUnlock(lockkey);
+			} else {
+				int lockkey = intLock();
+				fcsd.t.m.cmd &= ~(0x0000000F << (i + 1) * 4);
+				fcsd.t.m.cmd |= (tmp << (i + 1) * 4);
+				intUnlock(lockkey);
+			}
 		}
 		for (i = 0; i < 8; i++)
 			if (mlsd.r.m[i].rst)
@@ -646,7 +653,7 @@ void mls(void)
 		unsigned char umask = 0x00;
 		unsigned char i;
 		for (i = 0; i < 8; i++)
-			if (mlsd.t.m[i].exist && !(unsigned char *)&mlsd.t.m[i].err)
+			if (mlsd.t.m[i].exist && !*(unsigned char *)&mlsd.t.m[i].err)
 				umask |= 0x01 << i;
 		for (i = 0; i < 8; i++) {
 			if (mlsd.t.m[i].regret)
@@ -664,7 +671,7 @@ void mls(void)
 				else
 					mlsd.r.m[i].chk = mlsd.t.dp.chk;
 				mlsd.r.m[i].up = 0;
-				if ((unsigned char *)&mlsd.t.m[i].err == 0x20)
+				if (*(unsigned char *)&mlsd.t.m[i].err == 0x20)
 					mlsd.r.m[i].cage = mlsd.t.dp.cage;
 				else
 					mlsd.r.m[i].cage = 1;
