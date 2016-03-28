@@ -681,7 +681,7 @@ void mls(void)
 		}
 		unsigned char cut = 0x00;
 		for (i = 0; i < 8; i++)
-			if (mlsd.t.m[i].cut)
+			if (mlsd.t.m[i].cut && umask & 0x01 << i)
 				cut |= 0x01 << i;
 		if (bitsum1(cut) > 2)
 			continue;
@@ -780,9 +780,11 @@ void tmri(void)
 
 void mlsp(unsigned char avail, Mlsd *mlsd)
 {
+	if (!bitsum1(avail))
+		return;
 	static unsigned char force;
 	unsigned char i;
-	if (!mlsd->t.dp.chk && mlsd->t.dp.cage && mlsd->t.dp.safe && mlsd->t.dp.launch && !mlsd->t.dp.rst && !mlsd->t.ets.svstp && !mlsd->t.ets.svfbd && mlsd->t.ets.ahead) {
+	if (!mlsd->t.dp.chk && mlsd->t.dp.cage && mlsd->t.dp.safe && mlsd->t.dp.launch && !mlsd->t.dp.rst && !mlsd->t.ets.svstp && !mlsd->t.ets.svfbd /*&& mlsd->t.ets.ahead*/) {
 		for (i = 0; i < 8; i++)
 			if (mlsd->t.dp.mx & avail & 0x01 << i && mlsd->t.m[i].cut && !mlsd->t.m[i].pin0 && mlsd->t.m[i].pin1 && mlsd->t.m[i].ready && mlsd->t.m[i].safe) {
 				mlsd->r.m[i].mod = mlsd->t.dp.mod;
@@ -812,7 +814,7 @@ void mlsp(unsigned char avail, Mlsd *mlsd)
 	} else {
 		if (!mlsd->t.dp.cage) {
 			for (i = 0; i < 8; i++)
-				if (mlsd->t.dp.mx & avail & 0x01 << i && (!mlsd->t.m[i].pin0 || mlsd->t.m[i].pin1 || mlsd->t.m[i].ready || mlsd->t.m[i].safe || mlsd->t.m[i].regret))
+				if (mlsd->t.dp.mx & avail & 0x01 << i && (mlsd->t.m[i].ready || mlsd->t.m[i].safe || mlsd->t.m[i].regret))
 					break;
 			if (i == 8)
 				force = 0x00;
@@ -820,7 +822,7 @@ void mlsp(unsigned char avail, Mlsd *mlsd)
 		for (i = 0; i < 8; i++) {
 			if (mlsd->t.m[i].regret)
 				continue;
-			if (!(mlsd->t.dp.mx & 0x01 << i) && !mlsd->t.m[i].ready && !mlsd->t.m[i].safe) {
+			if (!(mlsd->t.dp.mx & avail & 0x01 << i) && !mlsd->t.m[i].ready && !mlsd->t.m[i].safe) {
 				mlsd->r.m[i].mod = mlsd->t.dp.mod;
 				mlsd->r.m[i].tail = mlsd->t.dp.tail;
 				mlsd->r.m[i].ajc = mlsd->t.dp.ajc;
@@ -838,7 +840,7 @@ void mlsp(unsigned char avail, Mlsd *mlsd)
 				mlsd->r.m[i].launch = 0;
 				continue;
 			}
-			if (mlsd->t.dp.mx & 0x01 << i && !mlsd->t.m[i].safe) {
+			if (mlsd->t.dp.mx & avail & 0x01 << i && !mlsd->t.m[i].safe) {
 				mlsd->r.m[i].mod = mlsd->t.dp.mod;
 				mlsd->r.m[i].tail = mlsd->t.dp.tail;
 				mlsd->r.m[i].ajc = mlsd->t.dp.ajc;
@@ -848,9 +850,8 @@ void mlsp(unsigned char avail, Mlsd *mlsd)
 				mlsd->r.m[i].cage = 0;
 				mlsd->r.m[i].safe = 0;
 				mlsd->r.m[i].launch = 0;
-				continue;
 			}
-			if (mlsd->t.dp.mx & 0x01 << i && mlsd->t.dp.cage && !(force & 0x01 << i)) {
+			if (mlsd->t.dp.mx & avail & 0x01 << i && mlsd->t.dp.cage && !(force & 0x01 << i)) {
 				mlsd->r.m[i].mod = mlsd->t.dp.mod;
 				mlsd->r.m[i].tail = mlsd->t.dp.tail;
 				mlsd->r.m[i].ajc = mlsd->t.dp.ajc;
@@ -860,9 +861,8 @@ void mlsp(unsigned char avail, Mlsd *mlsd)
 				mlsd->r.m[i].cage = 1;
 				mlsd->r.m[i].safe = 0;
 				mlsd->r.m[i].launch = 0;
-				continue;
 			}
-			if (mlsd->t.dp.mx & 0x01 << i && mlsd->t.dp.cage && mlsd->t.dp.safe && !(force & 0x01 << i)) {
+			if (mlsd->t.dp.mx & avail & 0x01 << i && mlsd->t.dp.cage && mlsd->t.dp.safe && !(force & 0x01 << i)) {
 				mlsd->r.m[i].mod = mlsd->t.dp.mod;
 				mlsd->r.m[i].tail = mlsd->t.dp.tail;
 				mlsd->r.m[i].ajc = mlsd->t.dp.ajc;
