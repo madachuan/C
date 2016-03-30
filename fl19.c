@@ -572,8 +572,8 @@ void fcs4(void)
 		fcsd.t.ir.azi = etsd.r.ir.azi;
 		fcsd.t.ir.pit = etsd.r.ir.pit;
 		fcsd.t.sv.sv = etsd.r.sv.sv1 && etsd.r.sv.sv2;
-		fcsd.t.sv.azi = fcsd.t.sv.azi;
-		fcsd.t.sv.pit = fcsd.t.sv.pit;
+		fcsd.t.sv.azi = etsd.r.sv.azi;
+		fcsd.t.sv.pit = etsd.r.sv.pit;
 		mlsd.t.ets.svstp = etsd.r.sv.stp;
 		mlsd.t.ets.svfbd = etsd.r.sv.fbd;
 		mlsd.t.ets.ahead = etsd.r.sv.ahead;
@@ -782,7 +782,6 @@ void mlsp(unsigned char avail, Mlsd *mlsd)
 {
 	if (!bitsum1(avail))
 		return;
-	static unsigned char force;
 	unsigned char i;
 	if (!mlsd->t.dp.chk && mlsd->t.dp.cage && mlsd->t.dp.safe && mlsd->t.dp.launch && !mlsd->t.dp.rst && !mlsd->t.ets.svstp && !mlsd->t.ets.svfbd /*&& mlsd->t.ets.ahead*/) {
 		for (i = 0; i < 8; i++)
@@ -809,69 +808,45 @@ void mlsp(unsigned char avail, Mlsd *mlsd)
 				mlsd->r.m[i].cage = 0;
 				mlsd->r.m[i].safe = 0;
 				mlsd->r.m[i].launch = 0;
-				force |= 0x01 << i;
 			}
 	} else {
-		if (!mlsd->t.dp.cage) {
-			for (i = 0; i < 8; i++)
-				if (mlsd->t.dp.mx & avail & 0x01 << i && (mlsd->t.m[i].ready || mlsd->t.m[i].safe || mlsd->t.m[i].regret))
-					break;
-			if (i == 8)
-				force = 0x00;
-		}
 		for (i = 0; i < 8; i++) {
 			if (mlsd->t.m[i].regret)
 				continue;
-			if (!(mlsd->t.dp.mx & avail & 0x01 << i) && !mlsd->t.m[i].ready && !mlsd->t.m[i].safe) {
-				mlsd->r.m[i].mod = mlsd->t.dp.mod;
-				mlsd->r.m[i].tail = mlsd->t.dp.tail;
-				mlsd->r.m[i].ajc = mlsd->t.dp.ajc;
-				if (!mlsd->t.m[i].cut && mlsd->t.m[i].pin0 && !mlsd->t.m[i].pin1)
-					mlsd->r.m[i].rst = mlsd->t.dp.rst;
-				else
-					mlsd->r.m[i].rst = 0;
-				if (!mlsd->t.m[i].cut)
-					mlsd->r.m[i].chk = mlsd->t.dp.chk;
-				else
-					mlsd->r.m[i].chk = 0;
-				mlsd->r.m[i].up = 0;
-				mlsd->r.m[i].cage = 0;
-				mlsd->r.m[i].safe = 0;
-				mlsd->r.m[i].launch = 0;
+			if (!(mlsd->t.dp.mx & avail & 0x01 << i)) {
+				if (!mlsd->t.m[i].ready && !mlsd->t.m[i].safe) {
+					mlsd->r.m[i].mod = mlsd->t.dp.mod;
+					mlsd->r.m[i].tail = mlsd->t.dp.tail;
+					mlsd->r.m[i].ajc = mlsd->t.dp.ajc;
+					if (!mlsd->t.m[i].cut) {
+						mlsd->r.m[i].rst = mlsd->t.dp.rst;
+						mlsd->r.m[i].chk = mlsd->t.dp.chk;
+					} else {
+						mlsd->r.m[i].rst = 0;
+						mlsd->r.m[i].chk = 0;
+					}
+					mlsd->r.m[i].up = 0;
+					mlsd->r.m[i].cage = 0;
+					mlsd->r.m[i].safe = 0;
+					mlsd->r.m[i].launch = 0;
+				}
 				continue;
 			}
-			if (mlsd->t.dp.mx & avail & 0x01 << i && !mlsd->t.m[i].safe) {
-				mlsd->r.m[i].mod = mlsd->t.dp.mod;
-				mlsd->r.m[i].tail = mlsd->t.dp.tail;
-				mlsd->r.m[i].ajc = mlsd->t.dp.ajc;
-				mlsd->r.m[i].rst = 0;
-				mlsd->r.m[i].chk = 0;
-				mlsd->r.m[i].up = 1;
-				mlsd->r.m[i].cage = 0;
-				mlsd->r.m[i].safe = 0;
-				mlsd->r.m[i].launch = 0;
-			}
-			if (mlsd->t.dp.mx & avail & 0x01 << i && mlsd->t.dp.cage && !(force & 0x01 << i)) {
-				mlsd->r.m[i].mod = mlsd->t.dp.mod;
-				mlsd->r.m[i].tail = mlsd->t.dp.tail;
-				mlsd->r.m[i].ajc = mlsd->t.dp.ajc;
-				mlsd->r.m[i].rst = 0;
-				mlsd->r.m[i].chk = 0;
-				mlsd->r.m[i].up = 1;
+			mlsd->r.m[i].mod = mlsd->t.dp.mod;
+			mlsd->r.m[i].tail = mlsd->t.dp.tail;
+			mlsd->r.m[i].ajc = mlsd->t.dp.ajc;
+			mlsd->r.m[i].rst = 0;
+			mlsd->r.m[i].chk = 0;
+			mlsd->r.m[i].up = 1;
+			mlsd->r.m[i].cage = 0;
+			mlsd->r.m[i].safe = 0;
+			mlsd->r.m[i].launch = 0;
+			if (mlsd->t.dp.cage && !mlsd->t.dp.safe) {
 				mlsd->r.m[i].cage = 1;
 				mlsd->r.m[i].safe = 0;
-				mlsd->r.m[i].launch = 0;
-			}
-			if (mlsd->t.dp.mx & avail & 0x01 << i && mlsd->t.dp.cage && mlsd->t.dp.safe && !(force & 0x01 << i)) {
-				mlsd->r.m[i].mod = mlsd->t.dp.mod;
-				mlsd->r.m[i].tail = mlsd->t.dp.tail;
-				mlsd->r.m[i].ajc = mlsd->t.dp.ajc;
-				mlsd->r.m[i].rst = 0;
-				mlsd->r.m[i].chk = 0;
-				mlsd->r.m[i].up = 1;
+			} else if(mlsd->t.dp.cage && mlsd->t.dp.safe && mlsd->t.m[i].ready) {
 				mlsd->r.m[i].cage = 1;
 				mlsd->r.m[i].safe = 1;
-				mlsd->r.m[i].launch = 0;
 			}
 		}
 	}
