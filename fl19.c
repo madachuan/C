@@ -181,7 +181,7 @@ void cant(void)
 			memcpy(buft[bufr[8]] + 5, bufr, 8);
 		static unsigned char ctr;
 		static unsigned char i;
-		switch (tick % 4) {
+		switch (tick % 5) {
 		case 0:
 			HK_CAN_WRITE(1, buft[0]);
 			break;
@@ -571,7 +571,7 @@ void fcs4(void)
 		fcsd.t.ir.get = etsd.r.ir.get;
 		fcsd.t.ir.azi = etsd.r.ir.azi;
 		fcsd.t.ir.pit = etsd.r.ir.pit;
-		fcsd.t.sv.sv = etsd.r.sv.sv1 && etsd.r.sv.sv2;
+		fcsd.t.sv.sv = etsd.r.sv.sv1 || etsd.r.sv.sv2;
 		fcsd.t.sv.azi = etsd.r.sv.azi;
 		fcsd.t.sv.pit = etsd.r.sv.pit;
 		mlsd.t.ets.svstp = etsd.r.sv.stp;
