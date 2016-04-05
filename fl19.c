@@ -1,8 +1,7 @@
 /*
  *	NAME: fl19.c
  *	AUTHOR: madachuan
- *	DISCRIPTION: fl19
-
+ *	DISCRIPTION: Fl19
  *
  *	MODIFIED:
  *	| DATE		| TIME		| DONE
@@ -377,6 +376,9 @@ void fcs1(void)
 			continue;
 		memcpy((unsigned char *)&fcsd.r + 10 * i, bufr + 5, 10);
 		unsigned char j;
+#if 1
+		printf("\033[22;60H%d ", i);
+#endif
 		switch (i) {
 		case 0:
 			etsd.t.ir.find = fcsd.r.ir.find;
@@ -663,45 +665,50 @@ void mls(void)
 				mlsd.r.m[i].mod = mlsd.t.dp.mod;
 				mlsd.r.m[i].tail = mlsd.t.dp.tail;
 				mlsd.r.m[i].ajc = mlsd.t.dp.ajc;
-				if (mlsd.t.m[i].err.dumb)
-					mlsd.r.m[i].rst = 0;
-				else
+				if (mlsd.t.m[i].exist) {
+					if (mlsd.t.m[i].err.dumb) {
+						mlsd.r.m[i].rst = 0;
+						mlsd.r.m[i].chk = 0;
+					} else {
+						mlsd.r.m[i].rst = mlsd.t.dp.rst;
+						mlsd.r.m[i].chk = mlsd.t.dp.chk;
+					}
+				} else {
 					mlsd.r.m[i].rst = mlsd.t.dp.rst;
-				if ((unsigned char *)&mlsd.t.m[i].err)
-					mlsd.r.m[i].chk = 0;
-				else
 					mlsd.r.m[i].chk = mlsd.t.dp.chk;
+				}
 				mlsd.r.m[i].up = 0;
-				if (*(unsigned char *)&mlsd.t.m[i].err == 0x20)
-					mlsd.r.m[i].cage = mlsd.t.dp.cage;
-				else
-					mlsd.r.m[i].cage = 1;
+				mlsd.r.m[i].cage = 1;
 				mlsd.r.m[i].safe = 0;
 				mlsd.r.m[i].launch = 0;
 			}
 		}
 		unsigned char cut = 0x00;
-		for (i = 0; i < 8; i++)
+		unsigned char mx = 0x00;
+		for (i = 0; i < 8; i++) {
 			if (mlsd.t.m[i].cut && umask & 0x01 << i)
 				cut |= 0x01 << i;
+			if (mlsd.t.dp.mx & 0x01 << i && umask & 0x01 << i)
+				mx |= 0x01 << i;
+		}
 		if (bitsum1(cut) > 2)
 			continue;
-		if ((mlsd.t.dp.mx | cut) == cut) {
-			mlsp(cut & umask, &mlsd);
+		if ((mx | cut) == cut) {
+			mlsp(cut, &mlsd);
 		} else {
 			if (bitsum1(cut) == 2) {
-				mlsp(cut & umask, &mlsd);
+				mlsp(cut, &mlsd);
 			} else {
-				if (bitsum1(mlsd.t.dp.mx | cut) <= 2) {
-					mlsp(mlsd.t.dp.mx & umask, &mlsd);
+				if (bitsum1(mx | cut) <= 2) {
+					mlsp(mx, &mlsd);
 				} else {
-					unsigned char tmp = mlsd.t.dp.mx;
+					unsigned char tmp = mx;
 					unsigned char j = 0xFF;
 					do {
 						j >>= 1;
 						tmp &= j;
 					} while (bitsum1(tmp | cut) > 2);
-					mlsp((tmp | cut) & umask, &mlsd);
+					mlsp(tmp | cut, &mlsd);
 				}
 			}
 		}
