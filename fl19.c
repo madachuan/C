@@ -50,6 +50,8 @@ int tacst;
 int tdcan;
 int tdgps;
 int tdacs;
+int com1;
+int com4;
 unsigned short counter;
 unsigned char tick;
 Fcsd fcsd;
@@ -89,10 +91,8 @@ void fl19(void)
 	tcanr = taskSpawn("canr", 100, VX_FP_TASK, 10000, (FUNCPTR)canr, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	tcant = taskSpawn("cant", 100, VX_FP_TASK, 10000, (FUNCPTR)cant, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	tgpsr = taskSpawn("gpsr", 100, VX_FP_TASK, 10000, (FUNCPTR)gpsr, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-#if 0
 	tacsr = taskSpawn("acsr", 100, VX_FP_TASK, 10000, (FUNCPTR)acsr, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	tacst = taskSpawn("acst", 100, VX_FP_TASK, 10000, (FUNCPTR)acst, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-#endif
 	tfcs1 = taskSpawn("fcs1", 100, VX_FP_TASK, 10000, (FUNCPTR)fcs1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	tfcs2 = taskSpawn("fcs2", 100, VX_FP_TASK, 10000, (FUNCPTR)fcs2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	tfcs3 = taskSpawn("fcs3", 100, VX_FP_TASK, 10000, (FUNCPTR)fcs3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
@@ -103,13 +103,13 @@ void fl19(void)
 	\--------------*/
 	tets = taskSpawn("ets", 100, VX_FP_TASK, 10000, (FUNCPTR)ets, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	tmls = taskSpawn("mls", 100, VX_FP_TASK, 10000, (FUNCPTR)mls, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-#if 0
 	/*------\
 	| Dummy	|
 	\------*/
 	tdgps = taskSpawn("dgps", 100, VX_FP_TASK, 10000, (FUNCPTR)dgps, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+#if 0
 	tdacs = taskSpawn("dacs", 100, VX_FP_TASK, 10000, (FUNCPTR)dacs, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-#endif
+#endif	
 }
 /*			|
  * FRIST LEVEL END	|
@@ -141,6 +141,8 @@ void com(void)
 	tyCoXRPCIDevCreate("/tjat/3", 3, 256, 256, 32, 32);
 	ioctl(open("/tjat/0", O_RDWR, 0), FIOBAUDRATE, 115200);
 	ioctl(open("/tjat/3", O_RDWR, 0), FIOBAUDRATE, 115200);
+	com1 = open("/tjat/0", O_RDWR, 0);
+	com4 = open("/tjat/3", O_RDWR, 0);
 }
 
 void tmr(void)
@@ -211,7 +213,6 @@ void gpsr(void)
 {
 	static char bufr[256];
 	static double buft[14];
-	int com4 = open("/tjat/3", O_RDWR, 0);
 	FOREVER {
 		unsigned short len = 0;
 		static unsigned short sum;
@@ -299,7 +300,7 @@ void gpsr(void)
 		}
 		int lockkey = intLock();
 		counter = 0;
-		msgQSend(mqfcs2, buft, sizeof(fcsd.r.gps), NO_WAIT, MSG_PRI_NORMAL);
+/*		msgQSend(mqfcs2, buft, sizeof(fcsd.r.gps), NO_WAIT, MSG_PRI_NORMAL);*/
 		intUnlock(lockkey);
 		sum = 0;
 		memset(bufr, 0x00, 256);
@@ -308,12 +309,12 @@ void gpsr(void)
 
 void acsr(void)
 {
-	int com1 = open("/tjat/0", O_RDWR, 0);
 	static unsigned char bufr[256];
 	FOREVER {
 		unsigned len = 0;
 		static unsigned sum;
 		len = read(com1, bufr + sum, 256 - sum);
+		printf("^");
 		if (sum == 0 && bufr[0] != 0xA5)
 			continue;
 		sum += len;
@@ -356,7 +357,6 @@ void acst(void)
 		fcsd.t.acs.ctr++;
 		fcsd.t.acs.end = 0xEE;
 		fcsd.t.acs.xor = chkxor(&fcsd.t.acs, sizeof(fcsd.t.acs) - 3);
-		int com1 = open("/tjat/0", O_RDWR, 0);
 		write(com1, &fcsd.t.acs, sizeof(fcsd.t.acs));
 		taskDelay(60);
 	}
@@ -376,9 +376,6 @@ void fcs1(void)
 			continue;
 		memcpy((unsigned char *)&fcsd.r + 10 * i, bufr + 5, 10);
 		unsigned char j;
-#if 1
-		printf("\033[22;60H%d ", i);
-#endif
 		switch (i) {
 		case 0:
 			etsd.t.ir.find = fcsd.r.ir.find;
@@ -643,7 +640,7 @@ void fcs5(void)
 		}
 	}
 }
-#if 1
+#if 0
 void ets(void)
 {
 }
@@ -719,7 +716,7 @@ void mls(void)
 
 void dgps(void)
 {
-	double buft[14] = {1800,95133.800,135,-57.00,196.49,45.83072500,122.61647500,240,-0.279,-0.944,-1.186,9.577,4,6};
+	double buft[14] = {1800,95133.800,135,-57.00,196.49,34.12345,108.12345,240,-0.279,-0.944,-1.186,9.577,4,6};
 	FOREVER {
 		buft[1]++;
 		counter = 0;
