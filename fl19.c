@@ -145,7 +145,7 @@ void com(void)
 
 void tmr(void)
 {
-	Tinterrupt(4);
+	Tinterrupt(7);
 	intConnect((VOIDFUNCPTR*)INUM_TO_IVEC(11 + 0x20), (VOIDFUNCPTR)tmri, 0);
 	sysIntEnablePIC(11);
 	open_Tint();
