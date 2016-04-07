@@ -335,8 +335,10 @@ void acsr(void)
 			memset(bufr, 0x00, 256);
 			continue;
 		}
+		if (bufr[1] < sizeof(fcsd.r.acs) + 5)
+			continue;
 		unsigned char i;
-		for (i = 3; i < bufr[1] - 3 - sizeof(fcsd.r.acs); i++) {
+		for (i = 3; i < bufr[1]  - sizeof(fcsd.r.acs); i++) {
 			if (bufr[i] != 0xD3)
 				continue;
 			if (bufr[i + sizeof(fcsd.r.acs) - 1] != chkxor(&bufr[i + 1], sizeof(fcsd.r.acs) - 2))

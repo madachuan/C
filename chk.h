@@ -1,2 +1,2 @@
-unsigned char chkadd(unsigned char *p, unsigned n);
-unsigned char chkxor(unsigned char *p, unsigned n);
+char chkadd(char *p, unsigned n);
+char chkxor(char *p, unsigned n);
