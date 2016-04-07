@@ -329,11 +329,13 @@ void acsr(void)
 			memset(bufr, 0x00, 256);
 			continue;
 		}
-		if (bufr[bufr[1] - 1] != chkxor(&bufr[1], bufr[1] - 3)) {
+#if 0
+		if (bufr[bufr[1] - 1] != (unsigned char)chkxor(&bufr[1], bufr[1] - 3)) {
 			sum = 0;
 			memset(bufr, 0x00, 256);
 			continue;
 		}
+#endif
 		if (bufr[1] < sizeof(fcsd.r.acs) + 5) {
 			sum = 0;
 			memset(bufr,0x00, 256);
@@ -343,8 +345,10 @@ void acsr(void)
 		for (i = 3; i < bufr[1]  - sizeof(fcsd.r.acs); i++) {
 			if (bufr[i] != 0xD3)
 				continue;
-			if (bufr[i + sizeof(fcsd.r.acs) - 1] != chkxor(&bufr[i + 1], sizeof(fcsd.r.acs) - 2))
+#if 0
+			if (bufr[i + sizeof(fcsd.r.acs) - 1] != (unsigned char)chkxor(&bufr[i + 1], sizeof(fcsd.r.acs) - 2))
 				continue;
+#endif
 			msgQSend(mqfcs3, bufr + 3, sizeof(fcsd.r.acs), NO_WAIT, MSG_PRI_NORMAL);
 			break;
 		}
@@ -560,7 +564,7 @@ void fcs3(void)
 		etsd.t.acs.vx = fcsd.r.acs.vx;
 		etsd.t.acs.vy = fcsd.r.acs.vy;
 		etsd.t.acs.vz = fcsd.r.acs.vz;
-		etsd.t.acs.stamp = fcsd.r.acs.stamp;
+		etsd.t.acs.stamp = /*fcsd.r.acs.stamp*/(unsigned long)(fcsd.r.gps.time * 1000) % 30000;
 		fcsd.t.dp.spd = sqrt(pow(fcsd.r.acs.vx, 2) + pow(fcsd.r.acs.vy, 2) + pow(fcsd.r.acs.vz, 2));
 		msgQSend(mqets, &etsd.t, sizeof(etsd.t), NO_WAIT, MSG_PRI_NORMAL);
 		msgQSend(mqacst, &fcsd.t.acs, sizeof(fcsd.t.acs), NO_WAIT, MSG_PRI_NORMAL);
