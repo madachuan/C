@@ -314,7 +314,6 @@ void acsr(void)
 		unsigned char len = 0;
 		static unsigned char sum;
 		len = read(com1, bufr + sum, 256 - sum);
-		printf("^");
 		if (sum == 0 && bufr[0] != 0xA5)
 			continue;
 		sum += len;
