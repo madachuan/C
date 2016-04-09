@@ -19,14 +19,14 @@ void dmchk(void)
 	printf("%d  ... chkxor\n", chkxor(buf, 9));
 }
 
-char chkadd(char *p, unsigned n)
+unsigned char chkadd(unsigned char *p, unsigned n)
 {
 	if (!n)
 		return 0;
 	return *p + chkadd(p + 1, n - 1);
 }
 
-char chkxor(char *p, unsigned n)
+unsigned char chkxor(unsigned char *p, unsigned n)
 {
 	if (!n)
 		return 0;

@@ -107,9 +107,6 @@ void fl19(void)
 	| Dummy	|
 	\------*/
 	tdgps = taskSpawn("dgps", 100, VX_FP_TASK, 10000, (FUNCPTR)dgps, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-#if 0
-	tdacs = taskSpawn("dacs", 100, VX_FP_TASK, 10000, (FUNCPTR)dacs, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-#endif	
 }
 /*			|
  * FRIST LEVEL END	|
@@ -311,8 +308,8 @@ void acsr(void)
 {
 	static unsigned char bufr[256];
 	FOREVER {
-		unsigned char len = 0;
-		static unsigned char sum;
+		unsigned short len = 0;
+		static unsigned short sum;
 		len = read(com1, bufr + sum, 256 - sum);
 		if (sum == 0 && bufr[0] != 0xA5)
 			continue;
@@ -329,13 +326,11 @@ void acsr(void)
 			memset(bufr, 0x00, 256);
 			continue;
 		}
-#if 0
-		if (bufr[bufr[1] - 1] != (unsigned char)chkxor(&bufr[1], bufr[1] - 3)) {
+		if (bufr[bufr[1] - 1] != chkxor(&bufr[1], bufr[1] - 3)) {
 			sum = 0;
 			memset(bufr, 0x00, 256);
 			continue;
 		}
-#endif
 		if (bufr[1] < sizeof(fcsd.r.acs) + 5) {
 			sum = 0;
 			memset(bufr,0x00, 256);
@@ -345,10 +340,10 @@ void acsr(void)
 		for (i = 3; i < bufr[1]  - sizeof(fcsd.r.acs); i++) {
 			if (bufr[i] != 0xD3)
 				continue;
-#if 0
-			if (bufr[i + sizeof(fcsd.r.acs) - 1] != (unsigned char)chkxor(&bufr[i + 1], sizeof(fcsd.r.acs) - 2))
+			if (!(bufr[i + 1] & 0x01<< fcsd.r.dp.num))
+				continue ;
+			if (bufr[i + sizeof(fcsd.r.acs) - 1] != chkxor(&bufr[i + 1], sizeof(fcsd.r.acs) - 2))
 				continue;
-#endif
 			msgQSend(mqfcs3, bufr + 3, sizeof(fcsd.r.acs), NO_WAIT, MSG_PRI_NORMAL);
 			break;
 		}
@@ -729,33 +724,6 @@ void dgps(void)
 		buft[1]++;
 		counter = 0;
 		msgQSend(mqfcs2, buft, sizeof(buft), NO_WAIT, MSG_PRI_NORMAL);
-		taskDelay(60);
-	}
-}
-
-void dacs(void)
-{
-	unsigned char buft[24] = {0xA5, 22, 0, 0xD3, 0xFF, 66, 0, 0, 0, 0, 0, 0, 0x64, 0, 3, 3, 3, 0xD8, 0x0E, 0x00, 0xEE, 0x00, 0x00, 0x1C};
-	double angle = 0;
-	double pi = 3.141592653589793;
-	FOREVER {
-		buft[2]++;
-		angle += (2 * pi / 600 / 50);
-		if (angle >= pi)
-			angle -= 2 * pi;
-		if (angle <= -pi)
-			angle += 2 * pi;
-		buft[6] = (unsigned long)((sin(angle) * 100 / 111 + 45.83072500) * 36000) & 0x000000FF;
-		buft[7] = ((unsigned long)((sin(angle) * 100 / 111 + 45.83072500) * 36000) & 0x0000FF00) >> 8;
-		buft[8] = ((unsigned long)((sin(angle) * 100 / 111 + 45.83072500) * 36000) & 0x00FF0000) >> 16;
-		buft[9] = (unsigned long)((cos(angle) * 100 / 111 / cos(45.83072500 / 180 * pi) + 122.61647500) * 36000) & 0x000000FF;
-		buft[10] = ((unsigned long)((cos(angle) * 100 / 111 / cos(45.83072500 / 180 * pi) + 122.61647500) * 36000) & 0x0000FF00) >> 8;
-		buft[11] = ((unsigned long)((cos(angle) * 100 / 111 / cos(45.83072500 / 180 * pi) + 122.61647500) * 36000) & 0x00FF0000) >> 16;
-		buft[17] = (unsigned long)(fcsd.r.gps.time * 1000) % 30000;
-		buft[18] = ((unsigned long)(fcsd.r.gps.time * 1000) % 30000) >> 8;
-		buft[19] = chkxor(buft + 4, 15);
-		buft[21] = chkxor(buft + 1, 19);
-		msgQSend(mqfcs3, buft + 3, 17, NO_WAIT, MSG_PRI_NORMAL);
 		taskDelay(60);
 	}
 }
