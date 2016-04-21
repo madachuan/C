@@ -179,7 +179,7 @@ void cant(void)
 		while (ERROR != msgQReceive(mqcant, bufr, 9, NO_WAIT))
 			memcpy(buft[bufr[8]] + 5, bufr, 8);
 		static unsigned char ctr;
-		static unsigned char i;
+		static unsigned char j;
 		switch (tick % 5) {
 		case 0:
 			HK_CAN_WRITE(1, buft[0]);
@@ -195,10 +195,10 @@ void cant(void)
 			HK_CAN_WRITE(1, buft[2]);
 			break;
 		case 3:
-			if (i > 3)
-				i = 0;
-			HK_CAN_WRITE(1, buft[3 + i]);
-			i++;
+			if (j > 3)
+				j = 0;
+			HK_CAN_WRITE(1, buft[3 + j]);
+			j++;
 			break;
 		default:
 			break;
@@ -512,7 +512,7 @@ void fcs1(void)
 		}
 		msgQSend(mqets, &etsd.t, sizeof(etsd.t), NO_WAIT, MSG_PRI_NORMAL);
 		msgQSend(mqmls, &mlsd.t, sizeof(mlsd.t), NO_WAIT, MSG_PRI_NORMAL);
-		unsigned k;
+		unsigned char k;
 		if (i > 1 && i < 10)
 			k = 2;
 		else if (i > 9)
@@ -570,7 +570,10 @@ void fcs4(void)
 {
 	FOREVER {
 		msgQReceive(mqfcs4, &etsd.r, sizeof(etsd.r), WAIT_FOREVER);
-		fcsd.t.ir.ir = etsd.r.ir.ir;
+		if (etsd.r.ir.get)
+			fcs.t.ir.ir = 0;
+		else
+			fcsd.t.ir.ir = etsd.r.ir.ir;
 		fcsd.t.ir.get = etsd.r.ir.get;
 		fcsd.t.ir.azi = etsd.r.ir.azi;
 		fcsd.t.ir.pit = etsd.r.ir.pit;

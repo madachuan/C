@@ -5,8 +5,8 @@ typedef struct {
 			unsigned char find:1;
 			unsigned char :1;
 			unsigned char ir:1;
-			unsigned char :1;
 			unsigned char track:1;
+			unsigned char :1;
 			unsigned char err;
 			short azi;
 			short pit;
