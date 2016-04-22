@@ -27,7 +27,6 @@
 SEM_ID sbtmr;
 MSG_Q_ID mqcanr;
 MSG_Q_ID mqcant;
-MSG_Q_ID mqacst;
 MSG_Q_ID mqfcs1;
 MSG_Q_ID mqfcs2;
 MSG_Q_ID mqfcs3;
@@ -70,7 +69,6 @@ void fl19(void)
 	sbtmr = semBCreate(SEM_EMPTY, SEM_Q_FIFO);
 	mqcanr = msgQCreate(1, 13, MSG_Q_FIFO);
 	mqcant = msgQCreate(4, 9, MSG_Q_FIFO);
-	mqacst = msgQCreate(1, sizeof(fcsd.t.acs), MSG_Q_FIFO);
 	mqfcs1 = msgQCreate(1, 15, MSG_Q_FIFO);
 	mqfcs2 = msgQCreate(1, sizeof(fcsd.r.gps), MSG_Q_FIFO);
 	mqfcs3 = msgQCreate(1, sizeof(fcsd.r.acs), MSG_Q_FIFO);
@@ -402,7 +400,8 @@ void fcs1(void)
 				fcsd.t.acs.errsv = 0;
 			etsd.t.sv.azi = fcsd.r.sv.azi;
 			etsd.t.sv.pit = fcsd.r.sv.pit;
-			etsd.t.sv.stamp = ((unsigned long)(fcsd.r.gps.time * 1000) + fcsd.r.sv.stamp) % 30000;
+			etsd.t.sv.stamp = etsd.t.ir.stamp;/*((unsigned long)(fcsd.r.gps.time * 1000) + fcsd.r.sv.stamp) % 30000;*/
+			msgQSend(mqets, &etsd.t, sizeof(etsd.t), NO_WAIT, MSG_PRI_NORMAL);
 			break;
 		case 2:
 		case 3:
@@ -462,6 +461,7 @@ void fcs1(void)
 					etsd.t.m.ready &= ~(0x01 << j);
 			}
 			mlsd.t.m[i - 2].gas = fcsd.r.m[i - 2].gas;
+			msgQSend(mqmls, &mlsd.t, sizeof(mlsd.t), NO_WAIT, MSG_PRI_NORMAL);
 			break;
 		case 10:
 			etsd.t.dp.sv1 = fcsd.r.dp.sv1;
@@ -510,8 +510,6 @@ void fcs1(void)
 		default:
 			break;
 		}
-		msgQSend(mqets, &etsd.t, sizeof(etsd.t), NO_WAIT, MSG_PRI_NORMAL);
-		msgQSend(mqmls, &mlsd.t, sizeof(mlsd.t), NO_WAIT, MSG_PRI_NORMAL);
 		unsigned char k;
 		if (i > 1 && i < 10)
 			k = 2;
@@ -543,7 +541,6 @@ void fcs2(void)
 		else
 			etsd.t.gps.ew = fcsd.t.dp.ew = fcsd.t.acs.ew = 1;
 		etsd.t.gps.alt = fcsd.t.dp.alt = fcsd.t.acs.alt = (short)(fcsd.r.gps.alt / 10);
-		msgQSend(mqets, &etsd.t, sizeof(etsd.t), NO_WAIT, MSG_PRI_NORMAL);
 	}
 }
 
@@ -561,8 +558,6 @@ void fcs3(void)
 		etsd.t.acs.vz = fcsd.r.acs.vz;
 		etsd.t.acs.stamp = /*fcsd.r.acs.stamp*/(unsigned long)(fcsd.r.gps.time * 1000) % 30000;
 		fcsd.t.dp.spd = sqrt(pow(fcsd.r.acs.vx, 2) + pow(fcsd.r.acs.vy, 2) + pow(fcsd.r.acs.vz, 2));
-		msgQSend(mqets, &etsd.t, sizeof(etsd.t), NO_WAIT, MSG_PRI_NORMAL);
-		msgQSend(mqacst, &fcsd.t.acs, sizeof(fcsd.t.acs), NO_WAIT, MSG_PRI_NORMAL);
 	}
 }
 
