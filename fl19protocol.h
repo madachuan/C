@@ -52,11 +52,11 @@ typedef struct {
 				unsigned char timeout:1;
 				unsigned char :1;
 				unsigned char dumb:1;
-			} err;
+			} __attribute__((packed)) err;
 			unsigned char res1;
 			unsigned char gas;
 			unsigned short stamp;
-		} m[8];
+		} __attribute__((packed)) m[8];
 		struct {
 			unsigned char sv1:1;
 			unsigned char sv2:1;
@@ -123,7 +123,7 @@ typedef struct {
 			double baseline;
 			double nsv1;
 			double nsv2;
-		} gps;
+		} __attribute__((packed)) gps;
 		struct {
 			unsigned char flag;
 			unsigned char num;
@@ -139,7 +139,7 @@ typedef struct {
 			unsigned short stamp;
 			unsigned char xor;
 		} __attribute__((packed)) acs;
-	} r;
+	} __attribute__((packed)) r;
 	struct {
 		struct {
 			unsigned char :5;
@@ -217,8 +217,8 @@ typedef struct {
 			unsigned char end;
 			unsigned char xor;
 		} __attribute__((packed)) acs;
-	} t;
-} Fcsd;
+	} __attribute__((packed)) t;
+} __attribute__((packed)) Fcsd;
 
 typedef struct {
 	struct {
@@ -255,7 +255,7 @@ typedef struct {
 			signed char vy;
 			signed char vz;
 		} __attribute__((packed)) guide;
-	} r;
+	} __attribute__((packed)) r;
 	struct {
 		struct {
 			unsigned short stamp;
@@ -280,7 +280,7 @@ typedef struct {
 		struct {
 			unsigned char err;
 			unsigned char ready;
-		} m;
+		} __attribute__((packed)) m;
 		struct {
 			unsigned char pos:1;
 			unsigned char guide:1;
@@ -325,8 +325,8 @@ typedef struct {
 			signed char vy;
 			signed char vz;
 		} __attribute__((packed)) acs;
-	} t;
-} Etsd;
+	} __attribute__((packed)) t;
+} __attribute__((packed)) Etsd;
 
 typedef struct {
 	struct {
@@ -342,15 +342,15 @@ typedef struct {
 			unsigned char safe:1;
 			unsigned char launch:1;
 			unsigned char :7;
-		} m[8];
-	} r;
+		} __attribute__((packed)) m[8];
+	} __attribute__((packed)) r;
 	struct {
 		struct {
 			unsigned char svstp:1;
 			unsigned char svfbd:1;
 			unsigned char ahead:1;
 			unsigned char :5;
-		} ets;
+		} __attribute__((packed)) ets;
 		struct {
 			struct {
 				unsigned char core:1;
@@ -361,7 +361,7 @@ typedef struct {
 				unsigned char timeout:1;
 				unsigned char :1;
 				unsigned char dumb:1;
-			} err;
+			} __attribute__((packed)) err;
 			unsigned char mod:1;
 			unsigned char tail:1;
 			unsigned char ajc:1;
@@ -377,7 +377,7 @@ typedef struct {
 			unsigned char engine:1;
 			unsigned char :3;
 			unsigned char gas;
-		} m[8];
+		} __attribute__((packed)) m[8];
 		struct {
 			unsigned char mx;
 			unsigned char mod:1;
@@ -388,6 +388,6 @@ typedef struct {
 			unsigned char safe:1;
 			unsigned char launch:1;
 			unsigned char rst:1;
-		} dp;
-	} t;
-} Mlsd;
+		} __attribute__((packed)) dp;
+	} __attribute__((packed)) t;
+} __attribute__((packed)) Mlsd;

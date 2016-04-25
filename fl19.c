@@ -566,7 +566,7 @@ void fcs4(void)
 	FOREVER {
 		msgQReceive(mqfcs4, &etsd.r, sizeof(etsd.r), WAIT_FOREVER);
 		if (etsd.r.ir.get)
-			fcs.t.ir.ir = 0;
+			fcsd.t.ir.ir = 0;
 		else
 			fcsd.t.ir.ir = etsd.r.ir.ir;
 		fcsd.t.ir.get = etsd.r.ir.get;
