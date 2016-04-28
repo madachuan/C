@@ -170,7 +170,6 @@ typedef struct {
 			unsigned char res;
 			unsigned char ctr;
 		} __attribute__((packed)) m;
-		unsigned char pw[8];
 		struct {
 			unsigned char spd:6;
 			unsigned char direct:1;
@@ -192,6 +191,7 @@ typedef struct {
 			unsigned long ew:1;
 			short alt;
 		} __attribute__((packed)) dp;
+		unsigned char pw[8];
 		struct {
 			unsigned char head;
 			unsigned char len;
