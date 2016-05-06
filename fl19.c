@@ -296,6 +296,12 @@ void gpsr(void)
 		}
 		int lockkey = intLock();
 		counter = 0;
+		fcsd.r.ir.stamp = 0;
+		fcsd.r.sv.stamp = 0;
+		unsigned char j;
+		for (j = 0; j < 8; j++)
+			fcsd.r.m[j].stamp = 0;
+		fcsd.r.dp.stamp1 = fcsd.r.dp.stamp2 = fcsd.r.dp.stamp3 = 0;
 /*		msgQSend(mqfcs2, buft, sizeof(fcsd.r.gps), NO_WAIT, MSG_PRI_NORMAL);*/
 		intUnlock(lockkey);
 		sum = 0;
@@ -722,6 +728,12 @@ void dgps(void)
 	FOREVER {
 		buft[1]++;
 		counter = 0;
+		fcsd.r.ir.stamp = 0;
+		fcsd.r.sv.stamp = 0;
+		unsigned char i;
+		for (i = 0; i < 8; i++)
+			fcsd.r.m[i].stamp = 0;
+		fcsd.r.dp.stamp1 = fcsd.r.dp.stamp2 = fcsd.r.dp.stamp3 = 0;
 		msgQSend(mqfcs2, buft, sizeof(buft), NO_WAIT, MSG_PRI_NORMAL);
 		taskDelay(60);
 	}
