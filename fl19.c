@@ -154,7 +154,8 @@ void canr(void)
 	static unsigned char buft[15];
 	FOREVER {
 		msgQReceive(mqcanr, bufr, 13, WAIT_FOREVER);
-		memcpy(buft + 13, &counter, 2);
+		unsigned short ctr = counter * 4;
+		memcpy(buft + 13, &ctr, 2);
 		if (bufr[0] == 0x88) {
 			memcpy(buft, bufr, 13);
 			msgQSend(mqfcs1, buft, 15, NO_WAIT, MSG_PRI_NORMAL);
