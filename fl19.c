@@ -727,6 +727,7 @@ void dgps(void)
 	double buft[14] = {1800,95133.800,135,-57.00,196.49,34.12345,108.12345,240,-0.279,-0.944,-1.186,9.577,4,6};
 	FOREVER {
 		buft[1]++;
+		int lockkey = intLock();
 		counter = 0;
 		fcsd.r.ir.stamp = 0;
 		fcsd.r.sv.stamp = 0;
@@ -735,6 +736,7 @@ void dgps(void)
 			fcsd.r.m[i].stamp = 0;
 		fcsd.r.dp.stamp1 = fcsd.r.dp.stamp2 = fcsd.r.dp.stamp3 = 0;
 		msgQSend(mqfcs2, buft, sizeof(buft), NO_WAIT, MSG_PRI_NORMAL);
+		intUnlock(lockkey);
 		taskDelay(60);
 	}
 }
