@@ -661,7 +661,7 @@ void mls(void)
 		unsigned char umask = 0x00;
 		unsigned char i;
 		for (i = 0; i < 8; i++)
-			if (mlsd.t.m[i].exist && !*(unsigned char *)&mlsd.t.m[i].err)
+			if (mlsd.t.m[i].exist && !*(unsigned char *) & mlsd.t.m[i].err)
 				umask |= 0x01 << i;
 		for (i = 0; i < 8; i++) {
 			if (mlsd.t.m[i].regret)
